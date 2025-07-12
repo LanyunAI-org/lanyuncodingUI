@@ -32,6 +32,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import { api } from './utils/api';
+import ActiveSessionsPanel from './components/ActiveSessionsPanel';
 
 
 // Main App component with routing
@@ -45,6 +46,7 @@ function AppContent() {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [projectSessions, setProjectSessions] = useState({}); // Map project names to their active sessions
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'files'
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -69,6 +71,9 @@ function AppContent() {
   // a message, the session is marked as "active" and project updates are paused
   // until the conversation completes or is aborted.
   const [activeSessions, setActiveSessions] = useState(new Set()); // Track sessions with active conversations
+  const [projectMessages, setProjectMessages] = useState({}); // Map project names to their message queues
+  const [globalActiveSessions, setGlobalActiveSessions] = useState({}); // Global session tracking
+  const [showActiveSessionsPanel, setShowActiveSessionsPanel] = useState(false);
   
   const { ws, sendMessage, messages } = useWebSocket();
 
@@ -181,6 +186,118 @@ function AppContent() {
       }
     }
   }, [messages, selectedProject, selectedSession, activeSessions]);
+
+  // Handle chat-related WebSocket messages for global session tracking
+  useEffect(() => {
+    if (messages.length > 0) {
+      const latestMessage = messages[messages.length - 1];
+      const projectId = latestMessage.projectId;
+      
+      // Debug log - Enhanced to show all message details
+      console.log('🔍 [App.jsx] WebSocket message:', {
+        type: latestMessage.type,
+        projectId: projectId,
+        hasProjectId: !!projectId,
+        fullMessage: latestMessage
+      });
+      console.log('📊 Current globalActiveSessions:', globalActiveSessions);
+      
+      // Find project info
+      const project = projects.find(p => p.name === projectId);
+      
+      switch (latestMessage.type) {
+        case 'session-created':
+          // New session created by backend
+          console.log('🎯 Session created:', latestMessage);
+          if (projectId && latestMessage.sessionId) {
+            setGlobalActiveSessions(prev => ({
+              ...prev,
+              [projectId]: {
+                projectId,
+                projectName: project?.displayName || projectId,
+                sessionId: latestMessage.sessionId,
+                isActive: true,
+                startTime: new Date().toISOString(),
+                status: { text: 'Starting...', tokens: 0 }
+              }
+            }));
+          }
+          break;
+          
+        case 'claude-status':
+          // Update status
+          if (projectId && latestMessage.data) {
+            setGlobalActiveSessions(prev => {
+              // If session doesn't exist yet, create it
+              if (!prev[projectId]) {
+                return {
+                  ...prev,
+                  [projectId]: {
+                    projectId,
+                    projectName: project?.displayName || projectId,
+                    sessionId: latestMessage.sessionId,
+                    isActive: true,
+                    startTime: new Date().toISOString(),
+                    status: {
+                      text: latestMessage.data.text || latestMessage.data,
+                      tokens: latestMessage.data.tokens || latestMessage.data.token_count || 0,
+                      can_interrupt: latestMessage.data.can_interrupt
+                    }
+                  }
+                };
+              }
+              
+              // Update existing session
+              return {
+                ...prev,
+                [projectId]: {
+                  ...prev[projectId],
+                  status: {
+                    text: latestMessage.data.text || latestMessage.data,
+                    tokens: latestMessage.data.tokens || latestMessage.data.token_count || 0,
+                    can_interrupt: latestMessage.data.can_interrupt
+                  }
+                }
+              };
+            });
+          }
+          break;
+          
+        case 'claude-complete':
+        case 'session-aborted':
+          // Session completed
+          if (projectId) {
+            setGlobalActiveSessions(prev => {
+              // Only update if session exists
+              if (!prev[projectId]) {
+                return prev;
+              }
+              
+              return {
+                ...prev,
+                [projectId]: {
+                  ...prev[projectId],
+                  isActive: false,
+                  endTime: new Date().toISOString()
+                }
+              };
+            });
+            
+            // Auto-remove completed sessions after 30 seconds
+            setTimeout(() => {
+              setGlobalActiveSessions(prev => {
+                const newState = { ...prev };
+                if (newState[projectId] && !newState[projectId].isActive) {
+                  delete newState[projectId];
+                }
+                return newState;
+              });
+            }, 30000);
+          }
+          break;
+      }
+    }
+  }, [messages, projects]);
 
   const fetchProjects = async () => {
     try {
@@ -373,6 +490,22 @@ function AppContent() {
   const markSessionAsActive = (sessionId) => {
     if (sessionId) {
       setActiveSessions(prev => new Set([...prev, sessionId]));
+      
+      // Also immediately create a global active session when user sends a message
+      if (selectedProject) {
+        console.log('🚀 Creating active session for project:', selectedProject.name);
+        setGlobalActiveSessions(prev => ({
+          ...prev,
+          [selectedProject.name]: {
+            projectId: selectedProject.name,
+            projectName: selectedProject.displayName || selectedProject.name,
+            sessionId: sessionId,
+            isActive: true,
+            startTime: new Date().toISOString(),
+            status: { text: 'Starting...', tokens: 0 }
+          }
+        }));
+      }
     }
   };
 
@@ -384,6 +517,35 @@ function AppContent() {
         newSet.delete(sessionId);
         return newSet;
       });
+      
+      // Mark global session as inactive
+      if (selectedProject) {
+        console.log('🏁 Marking session as inactive for project:', selectedProject.name);
+        setGlobalActiveSessions(prev => {
+          if (prev[selectedProject.name]) {
+            return {
+              ...prev,
+              [selectedProject.name]: {
+                ...prev[selectedProject.name],
+                isActive: false,
+                endTime: new Date().toISOString()
+              }
+            };
+          }
+          return prev;
+        });
+        
+        // Auto-remove after 30 seconds
+        setTimeout(() => {
+          setGlobalActiveSessions(prev => {
+            const newState = { ...prev };
+            if (newState[selectedProject.name] && !newState[selectedProject.name].isActive) {
+              delete newState[selectedProject.name];
+            }
+            return newState;
+          });
+        }, 30000);
+      }
     }
   };
 
@@ -509,6 +671,7 @@ function AppContent() {
               onProjectDelete={handleProjectDelete}
               isLoading={isLoadingProjects}
               onRefresh={handleSidebarRefresh}
+              onRefreshProjects={fetchProjects}
               onShowSettings={() => setShowToolsSettings(true)}
               updateAvailable={updateAvailable}
               latestVersion={latestVersion}
@@ -554,6 +717,7 @@ function AppContent() {
               onProjectDelete={handleProjectDelete}
               isLoading={isLoadingProjects}
               onRefresh={handleSidebarRefresh}
+              onRefreshProjects={fetchProjects}
               onShowSettings={() => setShowToolsSettings(true)}
               updateAvailable={updateAvailable}
               latestVersion={latestVersion}
@@ -620,6 +784,28 @@ function AppContent() {
           isMobile={isMobile}
         />
       )}
+      
+      {/* Active Sessions Monitor Button - Always show when there are sessions */}
+      {!showActiveSessionsPanel && (
+        <button
+          onClick={() => setShowActiveSessionsPanel(true)}
+          className="fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 shadow-lg z-40 flex items-center gap-2"
+          title="Show active sessions panel"
+        >
+          <div className="relative">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            {Object.keys(globalActiveSessions).length > 0 && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            )}
+          </div>
+          <span className="text-sm font-medium">
+            Sessions ({Object.values(globalActiveSessions).filter(s => s.isActive).length})
+          </span>
+        </button>
+      )}
 
       {/* Tools Settings Modal */}
       <ToolsSettings
@@ -629,6 +815,26 @@ function AppContent() {
 
       {/* Version Upgrade Modal */}
       <VersionUpgradeModal />
+      
+      {/* Active Sessions Panel */}
+      {showActiveSessionsPanel && (
+        <ActiveSessionsPanel
+          activeSessions={globalActiveSessions}
+          onSelectProject={(projectId) => {
+            const project = projects.find(p => p.name === projectId);
+            if (project) {
+              setSelectedProject(project);
+              // Find the latest session for this project
+              const latestSession = project.sessions?.[0];
+              if (latestSession) {
+                setSelectedSession(latestSession);
+                navigate(`/session/${latestSession.id}`);
+              }
+            }
+          }}
+          onClose={() => setShowActiveSessionsPanel(false)}
+        />
+      )}
     </div>
   );
 }

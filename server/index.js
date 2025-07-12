@@ -471,21 +471,25 @@ function handleChatConnection(ws) {
         console.log('💬 User message:', data.command || '[Continue/Resume]');
         console.log('📁 Project:', data.options?.projectPath || 'Unknown');
         console.log('🔄 Session:', data.options?.sessionId ? 'Resume' : 'New');
-        await spawnClaude(data.command, data.options, ws);
+        console.log('🏷️ Project ID:', data.projectId || 'Unknown');
+        console.log('📨 Full message data:', JSON.stringify(data, null, 2));
+        await spawnClaude(data.command, data.options, ws, data.projectId);
       } else if (data.type === 'abort-session') {
         console.log('🛑 Abort session request:', data.sessionId);
         const success = abortClaudeSession(data.sessionId);
         ws.send(JSON.stringify({
           type: 'session-aborted',
           sessionId: data.sessionId,
-          success
+          success,
+          projectId: data.projectId
         }));
       }
     } catch (error) {
       console.error('❌ Chat WebSocket error:', error.message);
       ws.send(JSON.stringify({
         type: 'error',
-        error: error.message
+        error: error.message,
+        projectId: data?.projectId
       }));
     }
   });

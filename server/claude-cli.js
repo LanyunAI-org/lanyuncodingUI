@@ -1,8 +1,9 @@
 import { spawn } from 'child_process';
 
 let activeClaudeProcesses = new Map(); // Track active processes by session ID
+let projectSessionMap = new Map(); // Track project ID to session ID mapping
 
-async function spawnClaude(command, options = {}, ws) {
+async function spawnClaude(command, options = {}, ws, projectId) {
   return new Promise(async (resolve, reject) => {
     const { sessionId, projectPath, cwd, resume, toolsSettings, permissionMode } = options;
     let capturedSessionId = sessionId; // Track session ID throughout the process
@@ -107,6 +108,11 @@ async function spawnClaude(command, options = {}, ws) {
     const processKey = capturedSessionId || sessionId || Date.now().toString();
     activeClaudeProcesses.set(processKey, claudeProcess);
     
+    // Track project to session mapping
+    if (projectId) {
+      projectSessionMap.set(projectId, processKey);
+    }
+    
     // Handle stdout (streaming JSON responses)
     claudeProcess.stdout.on('data', (data) => {
       const rawOutput = data.toString();
@@ -135,22 +141,38 @@ async function spawnClaude(command, options = {}, ws) {
               sessionCreatedSent = true;
               ws.send(JSON.stringify({
                 type: 'session-created',
-                sessionId: capturedSessionId
+                sessionId: capturedSessionId,
+                projectId: projectId
               }));
             }
           }
           
-          // Send parsed response to WebSocket
-          ws.send(JSON.stringify({
-            type: 'claude-response',
-            data: response
-          }));
+          // Check if this is a status message from Claude CLI
+          if (response.type === 'status' || response.type === 'working' || 
+              (response.message && typeof response.message === 'string' && 
+               (response.message.includes('Working') || response.message.includes('Thinking') || 
+                response.message.includes('Reading') || response.message.includes('Writing')))) {
+            // Send as claude-status message
+            ws.send(JSON.stringify({
+              type: 'claude-status',
+              data: response,
+              projectId: projectId
+            }));
+          } else {
+            // Send parsed response to WebSocket with project ID
+            ws.send(JSON.stringify({
+              type: 'claude-response',
+              data: response,
+              projectId: projectId
+            }));
+          }
         } catch (parseError) {
           console.log('📄 Non-JSON response:', line);
           // If not JSON, send as raw text
           ws.send(JSON.stringify({
             type: 'claude-output',
-            data: line
+            data: line,
+            projectId: projectId
           }));
         }
       }
@@ -161,7 +183,8 @@ async function spawnClaude(command, options = {}, ws) {
       console.error('Claude CLI stderr:', data.toString());
       ws.send(JSON.stringify({
         type: 'claude-error',
-        error: data.toString()
+        error: data.toString(),
+        projectId: projectId
       }));
     });
     
@@ -176,7 +199,8 @@ async function spawnClaude(command, options = {}, ws) {
       ws.send(JSON.stringify({
         type: 'claude-complete',
         exitCode: code,
-        isNewSession: !sessionId && !!command // Flag to indicate this was a new session
+        isNewSession: !sessionId && !!command, // Flag to indicate this was a new session
+        projectId: projectId
       }));
       
       if (code === 0) {
@@ -196,7 +220,8 @@ async function spawnClaude(command, options = {}, ws) {
       
       ws.send(JSON.stringify({
         type: 'claude-error',
-        error: error.message
+        error: error.message,
+        projectId: projectId
       }));
       
       reject(error);

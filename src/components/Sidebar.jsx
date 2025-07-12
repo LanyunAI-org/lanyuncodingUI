@@ -45,6 +45,7 @@ function Sidebar({
   onProjectDelete,
   isLoading,
   onRefresh,
+  onRefreshProjects, // Add this prop
   onShowSettings,
   updateAvailable,
   latestVersion,
@@ -181,10 +182,10 @@ function Sidebar({
 
       if (response.ok) {
         // Refresh projects to get updated data
-        if (window.refreshProjects) {
+        if (onRefreshProjects) {
+          onRefreshProjects();
+        } else if (window.refreshProjects) {
           window.refreshProjects();
-        } else {
-          window.location.reload();
         }
       } else {
         console.error('Failed to rename project');
@@ -261,10 +262,10 @@ function Sidebar({
         setNewProjectPath('');
         
         // Refresh projects to show the new one
-        if (window.refreshProjects) {
+        if (onRefreshProjects) {
+          onRefreshProjects();
+        } else if (window.refreshProjects) {
           window.refreshProjects();
-        } else {
-          window.location.reload();
         }
       } else {
         const error = await response.json();

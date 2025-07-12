@@ -897,8 +897,33 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     }
     return [];
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState(selectedSession?.id || null);
+  // Project-specific states stored by project name
+  const [projectStates, setProjectStates] = useState({});
+  
+  // Get current project's state or defaults
+  const projectState = projectStates[selectedProject?.name] || {
+    isLoading: false,
+    canAbortSession: false,
+    claudeStatus: null,
+    sessionId: selectedSession?.id || null
+  };
+  
+  const isLoading = projectState.isLoading;
+  const canAbortSession = projectState.canAbortSession;
+  const claudeStatus = projectState.claudeStatus;
+  const currentSessionId = projectState.sessionId;
+  
+  // Helper to update project-specific state
+  const updateProjectState = (updates) => {
+    if (!selectedProject) return;
+    setProjectStates(prev => ({
+      ...prev,
+      [selectedProject.name]: {
+        ...prev[selectedProject.name],
+        ...updates
+      }
+    }));
+  };
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [sessionMessages, setSessionMessages] = useState([]);
   const [isLoadingSessionMessages, setIsLoadingSessionMessages] = useState(false);
@@ -914,7 +939,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   const [selectedFileIndex, setSelectedFileIndex] = useState(-1);
   const [cursorPosition, setCursorPosition] = useState(0);
   const [atSymbolPosition, setAtSymbolPosition] = useState(-1);
-  const [canAbortSession, setCanAbortSession] = useState(false);
+  // Removed - now using projectState.canAbortSession
   const [isUserScrolledUp, setIsUserScrolledUp] = useState(false);
   const scrollPositionRef = useRef({ height: 0, top: 0 });
   const [showCommandMenu, setShowCommandMenu] = useState(false);
@@ -923,7 +948,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   const [isTextareaExpanded, setIsTextareaExpanded] = useState(false);
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(-1);
   const [slashPosition, setSlashPosition] = useState(-1);
-  const [claudeStatus, setClaudeStatus] = useState(null);
+  // Removed - now using projectState.claudeStatus
 
 
   // Memoized diff calculation to prevent recalculating on every render
@@ -1130,7 +1155,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     // Load session messages when session changes
     const loadMessages = async () => {
       if (selectedSession && selectedProject) {
-        setCurrentSessionId(selectedSession.id);
+        updateProjectState({ sessionId: selectedSession.id });
         
         // Only load messages from API if this is a user-initiated session change
         // For system-initiated changes, preserve existing messages and rely on WebSocket
@@ -1149,7 +1174,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
       } else {
         setChatMessages([]);
         setSessionMessages([]);
-        setCurrentSessionId(null);
+        updateProjectState({ sessionId: null });
       }
     };
     
@@ -1199,15 +1224,35 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
 
 
   useEffect(() => {
-    // Handle WebSocket messages
+    // Handle WebSocket messages - filter by project ID
+    // Only process messages that explicitly match this project
+    const projectMessages = messages.filter(msg => 
+      msg.projectId && msg.projectId === selectedProject?.name
+    );
+    
+    // Debug logging
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1];
+      console.log('🎯 [ChatInterface] Received message:', {
+        type: latestMessage.type,
+        projectId: latestMessage.projectId,
+        selectedProject: selectedProject?.name,
+        isFiltered: !latestMessage.projectId || latestMessage.projectId !== selectedProject?.name,
+        totalMessages: messages.length,
+        filteredMessages: projectMessages.length
+      });
+    }
+    
+    if (projectMessages.length > 0) {
+      const latestMessage = projectMessages[projectMessages.length - 1];
       
       switch (latestMessage.type) {
         case 'session-created':
           // New session created by Claude CLI - we receive the real session ID here
-          // Store it temporarily until conversation completes (prevents premature session association)
-          if (latestMessage.sessionId && !currentSessionId) {
+          // Store it for the specific project
+          if (latestMessage.sessionId && latestMessage.projectId === selectedProject?.name) {
+            updateProjectState({ sessionId: latestMessage.sessionId });
+            
             sessionStorage.setItem('pendingSessionId', latestMessage.sessionId);
             
             // Session Protection: Replace temporary "new-session-*" identifier with real session ID
@@ -1361,9 +1406,14 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           break;
           
         case 'claude-complete':
-          setIsLoading(false);
-          setCanAbortSession(false);
-          setClaudeStatus(null);
+          // Only update loading state if this message is for the current project
+          if (!latestMessage.projectId || latestMessage.projectId === selectedProject?.name) {
+            updateProjectState({
+              isLoading: false,
+              canAbortSession: false,
+              claudeStatus: null
+            });
+          }
 
           
           // Session Protection: Mark session as inactive to re-enable automatic project updates
@@ -1377,15 +1427,20 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           // If we have a pending session ID and the conversation completed successfully, use it
           const pendingSessionId = sessionStorage.getItem('pendingSessionId');
           if (pendingSessionId && !currentSessionId && latestMessage.exitCode === 0) {
-                setCurrentSessionId(pendingSessionId);
+                updateProjectState({ sessionId: pendingSessionId });
             sessionStorage.removeItem('pendingSessionId');
           }
           break;
           
         case 'session-aborted':
-          setIsLoading(false);
-          setCanAbortSession(false);
-          setClaudeStatus(null);
+          // Only update loading state if this message is for the current project
+          if (!latestMessage.projectId || latestMessage.projectId === selectedProject?.name) {
+            updateProjectState({
+              isLoading: false,
+              canAbortSession: false,
+              claudeStatus: null
+            });
+          }
           
           // Session Protection: Mark session as inactive when aborted
           // User or system aborted the conversation, re-enable project updates
@@ -1393,20 +1448,25 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
             onSessionInactive(currentSessionId);
           }
           
-          setChatMessages(prev => [...prev, {
-            type: 'assistant',
-            content: 'Session interrupted by user.',
-            timestamp: new Date()
-          }]);
+          // Only add message if this abort is for the current project
+          if (!latestMessage.projectId || latestMessage.projectId === selectedProject?.name) {
+            setChatMessages(prev => [...prev, {
+              type: 'assistant',
+              content: 'Session interrupted by user.',
+              timestamp: new Date()
+            }]);
+          }
           break;
 
         case 'claude-status':
           // Handle Claude working status messages
           console.log('🔔 Received claude-status message:', latestMessage);
-          const statusData = latestMessage.data;
-          if (statusData) {
-            // Parse the status message to extract relevant information
-            let statusInfo = {
+          // Only process status for current project
+          if (!latestMessage.projectId || latestMessage.projectId === selectedProject?.name) {
+            const statusData = latestMessage.data;
+            if (statusData) {
+              // Parse the status message to extract relevant information
+              let statusInfo = {
               text: 'Working...',
               tokens: 0,
               can_interrupt: true
@@ -1434,20 +1494,32 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
             }
             
             console.log('📊 Setting claude status:', statusInfo);
-            setClaudeStatus(statusInfo);
-            setIsLoading(true);
-            setCanAbortSession(statusInfo.can_interrupt);
+            updateProjectState({
+              claudeStatus: statusInfo,
+              isLoading: true,
+              canAbortSession: statusInfo.can_interrupt
+            });
+            }
           }
           break;
   
       }
     }
-  }, [messages]);
+  }, [messages, selectedProject]);
 
   // Load file list when project changes
   useEffect(() => {
     if (selectedProject) {
       fetchProjectFiles();
+    }
+  }, [selectedProject]);
+  
+  // Load chat messages when project changes
+  useEffect(() => {
+    if (selectedProject) {
+      const saved = localStorage.getItem(`chat_messages_${selectedProject.name}`);
+      setChatMessages(saved ? JSON.parse(saved) : []);
+      // Project state will be automatically loaded from projectStates
     }
   }, [selectedProject]);
 
@@ -1631,13 +1703,14 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     };
 
     setChatMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-    setCanAbortSession(true);
-    // Set a default status when starting
-    setClaudeStatus({
-      text: 'Processing',
-      tokens: 0,
-      can_interrupt: true
+    updateProjectState({
+      isLoading: true,
+      canAbortSession: true,
+      claudeStatus: {
+        text: 'Processing',
+        tokens: 0,
+        can_interrupt: true
+      }
     });
     
     // Always scroll to bottom when user sends a message and reset scroll state
@@ -1677,6 +1750,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     sendMessage({
       type: 'claude-command',
       command: input,
+      projectId: selectedProject.name, // Add project ID for routing
       options: {
         projectPath: selectedProject.path,
         cwd: selectedProject.fullPath,
@@ -1789,15 +1863,19 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   const handleNewSession = () => {
     setChatMessages([]);
     setInput('');
-    setIsLoading(false);
-    setCanAbortSession(false);
+    updateProjectState({
+      isLoading: false,
+      canAbortSession: false,
+      claudeStatus: null
+    });
   };
   
   const handleAbortSession = () => {
     if (currentSessionId && canAbortSession) {
       sendMessage({
         type: 'abort-session',
-        sessionId: currentSessionId
+        sessionId: currentSessionId,
+        projectId: selectedProject.name
       });
     }
   };

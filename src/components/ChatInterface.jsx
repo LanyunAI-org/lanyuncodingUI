@@ -1226,8 +1226,9 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           setIsSystemSessionChange(false);
         }
       } else {
-        setChatMessages([]);
+        // No session selected - clear session messages and reset state
         setSessionMessages([]);
+        setChatMessages([]);
         updateProjectState({ sessionId: null });
       }
     };
@@ -1237,10 +1238,10 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
 
   // Update chatMessages when convertedMessages changes
   useEffect(() => {
-    if (sessionMessages.length > 0) {
+    if (sessionMessages.length > 0 && selectedSession) {
       setChatMessages(convertedMessages);
     }
-  }, [convertedMessages, sessionMessages]);
+  }, [convertedMessages, sessionMessages, selectedSession]);
 
   // Notify parent when input focus changes
   useEffect(() => {
@@ -1575,12 +1576,21 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   
   // Load chat messages when project changes
   useEffect(() => {
+    // When project changes, handle message state appropriately
     if (selectedProject) {
-      const saved = localStorage.getItem(`chat_messages_${selectedProject.name}`);
-      setChatMessages(saved ? JSON.parse(saved) : []);
+      // If we have a selected session, let the session loading effect handle messages
+      // Otherwise, check for saved draft messages only if no session is selected
+      if (!selectedSession) {
+        const saved = localStorage.getItem(`chat_messages_${selectedProject.name}`);
+        setChatMessages(saved ? JSON.parse(saved) : []);
+      }
       // Project state will be automatically loaded from projectStates
+    } else {
+      // No project selected, clear everything
+      setChatMessages([]);
+      setSessionMessages([]);
     }
-  }, [selectedProject]);
+  }, [selectedProject, selectedSession]);
 
   const fetchProjectFiles = async () => {
     try {

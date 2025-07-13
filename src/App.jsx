@@ -370,23 +370,28 @@ function AppContent() {
   }, [sessionId, projects, navigate]);
 
   const handleProjectSelect = (project) => {
-    // When selecting a project, automatically prepare for a new session
-    // This allows users to immediately start typing without clicking "new session"
+    // Update selected project
     setSelectedProject(project);
-    setSelectedSession(null);
-    setActiveTab('chat'); // Switch to chat tab for immediate interaction
-    navigate('/');
+    
+    // Smart session selection:
+    // 1. If project has sessions, select the most recent one
+    // 2. If no sessions, prepare for new session (null)
+    if (project.sessions && project.sessions.length > 0) {
+      // Sessions are already sorted by lastActivity (most recent first)
+      const mostRecentSession = project.sessions[0];
+      setSelectedSession(mostRecentSession);
+      setActiveTab('chat');
+      navigate(`/session/${mostRecentSession.id}`);
+    } else {
+      // No sessions in this project, prepare for new session
+      setSelectedSession(null);
+      setActiveTab('chat');
+      navigate('/');
+    }
+    
     if (isMobile) {
       setSidebarOpen(false);
     }
-    
-    // Force a state update to ensure ChatInterface receives the updated project
-    // This ensures the chat is ready to accept messages immediately
-    setTimeout(() => {
-      if (selectedProject?.name !== project.name) {
-        setSelectedProject(project);
-      }
-    }, 0);
   };
 
   const handleSessionSelect = (session) => {

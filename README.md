@@ -33,10 +33,11 @@ A desktop and mobile UI for [Claude Code](https://docs.anthropic.com/en/docs/cla
 
 ## Features
 
-- **Responsive Design** - Works seamlessly across desktop, tablet, and mobile
+- **Responsive Design** - Works seamlessly across desktop, tablet, and mobile so you can also use Claude Code from mobile 
 - **Interactive Chat Interface** - Built-in chat interface for seamless communication with Claude Code
 - **Integrated Shell Terminal** - Direct access to Claude Code CLI through built-in shell functionality
 - **File Explorer** - Interactive file tree with syntax highlighting and live editing
+- **Git Explorer** - View, stage and commit your changes. You can also switch branches 
 - **Session Management** - Resume conversations, manage multiple sessions, and track history
 
 
@@ -72,6 +73,7 @@ cp .env.example .env
 npm run dev
 
 ```
+The application will start at the port you specified in your .env
 
 5. **Open your browser:**
    - Development: `http://localhost:3001`
@@ -120,17 +122,21 @@ The UI automatically discovers Claude Code projects from `~/.claude/projects/` a
 - **Syntax Highlighting** - Support for multiple programming languages
 - **File Operations** - Create, rename, delete files and directories
 
+#### Git Explorer
+
+
 #### Session Management
 - **Session Persistence** - All conversations automatically saved
 - **Session Organization** - Group sessions by project and timestamp
 - **Session Actions** - Rename, delete, and export conversation history
 - **Cross-device Sync** - Access sessions from any device
 
-### Mobile Experience
+### Mobile App
 - **Responsive Design** - Optimized for all screen sizes
 - **Touch-friendly Interface** - Swipe gestures and touch navigation
 - **Mobile Navigation** - Bottom tab bar for easy thumb navigation
 - **Adaptive Layout** - Collapsible sidebar and smart content prioritization
+- **Add shortcut to Home Screen** - Add a shortcut to your home screen and the app will behave like a PWA
 
 ## Architecture
 

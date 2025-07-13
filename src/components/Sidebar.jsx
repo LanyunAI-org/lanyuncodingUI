@@ -755,6 +755,34 @@ function Sidebar({
                               </>
                             ) : (
                               <>
+                                {/* New Session button */}
+                                <button
+                                  className="w-8 h-8 rounded-lg bg-green-500/10 dark:bg-green-900/30 flex items-center justify-center active:scale-90 transition-all duration-150 border border-green-200 dark:border-green-800"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onProjectSelect(project);
+                                    onNewSession(project);
+                                  }}
+                                  onTouchEnd={handleTouchClick(() => {
+                                    onProjectSelect(project);
+                                    onNewSession(project);
+                                  })}
+                                  title="New session"
+                                >
+                                  <Plus className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                </button>
+                                {/* Edit button */}
+                                <button
+                                  className="w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center active:scale-90 border border-primary/20 dark:border-primary/30"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    startEditing(project);
+                                  }}
+                                  onTouchEnd={handleTouchClick(() => startEditing(project))}
+                                  title="Rename project"
+                                >
+                                  <Edit3 className="w-4 h-4 text-primary" />
+                                </button>
                                 {/* Star button */}
                                 <button
                                   className={cn(
@@ -789,16 +817,6 @@ function Sidebar({
                                     <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
                                   </button>
                                 )}
-                                <button
-                                  className="w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center active:scale-90 border border-primary/20 dark:border-primary/30"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    startEditing(project);
-                                  }}
-                                  onTouchEnd={handleTouchClick(() => startEditing(project))}
-                                >
-                                  <Edit3 className="w-4 h-4 text-primary" />
-                                </button>
                                 <div className="w-6 h-6 rounded-md bg-muted/30 flex items-center justify-center">
                                   {isExpanded ? (
                                     <ChevronDown className="w-3 h-3 text-muted-foreground" />
@@ -906,6 +924,29 @@ function Sidebar({
                           </>
                         ) : (
                           <>
+                            {/* New Session button */}
+                            <div
+                              className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-green-50 dark:hover:bg-green-900/20 flex items-center justify-center rounded cursor-pointer touch:opacity-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onProjectSelect(project);
+                                onNewSession(project);
+                              }}
+                              title="New session"
+                            >
+                              <Plus className="w-3 h-3 text-green-600 dark:text-green-400" />
+                            </div>
+                            {/* Edit button */}
+                            <div
+                              className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-accent flex items-center justify-center rounded cursor-pointer touch:opacity-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEditing(project);
+                              }}
+                              title="Rename project (F2)"
+                            >
+                              <Edit3 className="w-3 h-3" />
+                            </div>
                             {/* Star button */}
                             <div
                               className={cn(
@@ -926,16 +967,6 @@ function Sidebar({
                                   ? "text-yellow-600 dark:text-yellow-400 fill-current" 
                                   : "text-muted-foreground"
                               )} />
-                            </div>
-                            <div
-                              className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-accent flex items-center justify-center rounded cursor-pointer touch:opacity-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startEditing(project);
-                              }}
-                              title="Rename project (F2)"
-                            >
-                              <Edit3 className="w-3 h-3" />
                             </div>
                             {getAllSessions(project).length === 0 && (
                               <div

@@ -34,6 +34,11 @@ const userDb = {
       const row = db.prepare('SELECT COUNT(*) as count FROM users').get();
       return row.count > 0;
     } catch (err) {
+      console.error('Error checking for users:', err.message);
+      // If table doesn't exist, return false instead of throwing
+      if (err.message.includes('no such table')) {
+        return false;
+      }
       throw err;
     }
   },

@@ -17,6 +17,7 @@ import FileTree from './FileTree';
 import CodeEditor from './CodeEditor';
 import Shell from './Shell';
 import GitPanel from './GitPanel';
+import DevTerminal from './DevTerminal';
 
 function MainContent({ 
   selectedProject, 
@@ -173,7 +174,7 @@ function MainContent({
               ) : (
                 <div>
                   <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                    {activeTab === 'files' ? 'Project Files' : activeTab === 'git' ? 'Source Control' : 'Project'}
+                    {activeTab === 'files' ? 'Project Files' : activeTab === 'git' ? 'Source Control' : activeTab === 'terminal' ? 'Development Terminal' : 'Project'}
                   </h2>
                   <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                     {selectedProject.displayName}
@@ -246,6 +247,21 @@ function MainContent({
                   <span className="hidden sm:inline">Source Control</span>
                 </span>
               </button>
+              <button
+                onClick={() => setActiveTab('terminal')}
+                className={`relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
+                  activeTab === 'terminal'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                <span className="flex items-center gap-1 sm:gap-1.5">
+                  <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <span className="hidden sm:inline">Terminal</span>
+                </span>
+              </button>
                {/* <button
                 onClick={() => setActiveTab('preview')}
                 className={`relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
@@ -299,6 +315,12 @@ function MainContent({
         </div>
         <div className={`h-full overflow-hidden ${activeTab === 'git' ? 'block' : 'hidden'}`}>
           <GitPanel selectedProject={selectedProject} isMobile={isMobile} />
+        </div>
+        <div className={`h-full overflow-hidden ${activeTab === 'terminal' ? 'block' : 'hidden'}`}>
+          <DevTerminal 
+            selectedProject={selectedProject} 
+            isActive={activeTab === 'terminal'}
+          />
         </div>
         <div className={`h-full overflow-hidden ${activeTab === 'preview' ? 'block' : 'hidden'}`}>
           {/* <LivePreviewPanel

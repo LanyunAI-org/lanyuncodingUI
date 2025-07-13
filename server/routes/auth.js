@@ -8,14 +8,14 @@ const router = express.Router();
 // Check auth status and setup requirements
 router.get('/status', async (req, res) => {
   try {
-    const hasUsers = await userDb.hasUsers();
+    const hasUsers = userDb.hasUsers();
     res.json({ 
       needsSetup: !hasUsers,
       isAuthenticated: false // Will be overridden by frontend if token exists
     });
   } catch (error) {
     console.error('Auth status error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
 });
 
@@ -34,9 +34,14 @@ router.post('/register', async (req, res) => {
     }
     
     // Check if users already exist (only allow one user)
-    const hasUsers = userDb.hasUsers();
-    if (hasUsers) {
-      return res.status(403).json({ error: 'User already exists. This is a single-user system.' });
+    try {
+      const hasUsers = userDb.hasUsers();
+      if (hasUsers) {
+        return res.status(403).json({ error: 'User already exists. This is a single-user system.' });
+      }
+    } catch (error) {
+      console.error('Error checking for existing users:', error);
+      return res.status(500).json({ error: 'Database error: ' + error.message });
     }
     
     // Hash password

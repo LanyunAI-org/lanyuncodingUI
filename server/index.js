@@ -450,6 +450,8 @@ wss.on('connection', (ws, request) => {
     handleShellConnection(ws);
   } else if (pathname === '/ws') {
     handleChatConnection(ws);
+  } else if (pathname === '/terminal') {
+    handleTerminalConnection(ws);
   } else {
     console.log('❌ Unknown WebSocket path:', pathname);
     ws.close();
@@ -669,6 +671,114 @@ function handleShellConnection(ws) {
     console.error('❌ Shell WebSocket error:', error);
   });
 }
+
+// Handle terminal WebSocket connections (for development terminal)
+function handleTerminalConnection(ws) {
+  console.log('💻 Terminal client connected');
+  let terminalProcess = null;
+  
+  ws.on('message', async (message) => {
+    try {
+      const data = JSON.parse(message);
+      console.log('📨 Terminal message received:', data.type);
+      
+      if (data.type === 'init') {
+        // Initialize terminal with project path
+        const projectPath = data.projectPath || process.cwd();
+        
+        console.log('🚀 Starting terminal in:', projectPath);
+        
+        // Send welcome message
+        ws.send(JSON.stringify({
+          type: 'output',
+          data: `\x1b[36mDevelopment Terminal - ${projectPath}\x1b[0m\r\n`
+        }));
+        
+        try {
+          // Get the user's default shell
+          const defaultShell = process.env.SHELL || '/bin/bash';
+          
+          // Start terminal using PTY for proper terminal emulation
+          terminalProcess = pty.spawn(defaultShell, [], {
+            name: 'xterm-256color',
+            cols: 80,
+            rows: 24,
+            cwd: projectPath,
+            env: { 
+              ...process.env,
+              TERM: 'xterm-256color',
+              COLORTERM: 'truecolor',
+              FORCE_COLOR: '3'
+            }
+          });
+          
+          console.log('🟢 Terminal process started with PTY, PID:', terminalProcess.pid);
+          
+          // Handle data output
+          terminalProcess.onData((data) => {
+            if (ws.readyState === ws.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'output',
+                data: data
+              }));
+            }
+          });
+          
+          // Handle terminal exit
+          terminalProcess.onExit(({ exitCode, signal }) => {
+            console.log('💀 Terminal process exited:', { exitCode, signal });
+            if (ws.readyState === ws.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'exit',
+                exitCode,
+                signal
+              }));
+            }
+          });
+          
+        } catch (error) {
+          console.error('❌ Failed to start terminal:', error);
+          ws.send(JSON.stringify({
+            type: 'output',
+            data: `\r\n\x1b[31mFailed to start terminal: ${error.message}\x1b[0m\r\n`
+          }));
+        }
+        
+      } else if (data.type === 'input') {
+        // Send input to terminal
+        if (terminalProcess && terminalProcess.write) {
+          terminalProcess.write(data.data);
+        }
+      } else if (data.type === 'resize') {
+        // Handle terminal resize
+        if (terminalProcess && terminalProcess.resize) {
+          terminalProcess.resize(data.cols, data.rows);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Terminal WebSocket error:', error.message);
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'output',
+          data: `\r\n\x1b[31mError: ${error.message}\x1b[0m\r\n`
+        }));
+      }
+    }
+  });
+  
+  ws.on('close', () => {
+    console.log('🔌 Terminal client disconnected');
+    if (terminalProcess && terminalProcess.kill) {
+      console.log('🔴 Killing terminal process:', terminalProcess.pid);
+      terminalProcess.kill();
+    }
+  });
+  
+  ws.on('error', (error) => {
+    console.error('❌ Terminal WebSocket error:', error);
+  });
+}
+
 // Audio transcription endpoint
 app.post('/api/transcribe', authenticateToken, async (req, res) => {
   try {
@@ -996,7 +1106,7 @@ async function startServer() {
   try {
     // Initialize authentication database
     await initializeDatabase();
-    console.log('✅ Database initialization skipped (testing)');
+    console.log('✅ Database initialized successfully');
     
     server.listen(PORT, '0.0.0.0', async () => {
       console.log(`Claude Code UI server running on http://0.0.0.0:${PORT}`);

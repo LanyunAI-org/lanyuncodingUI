@@ -33,6 +33,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import { api } from './utils/api';
 import ActiveSessionsPanel from './components/ActiveSessionsPanel';
+import ActiveTerminalsPanel from './components/ActiveTerminalsPanel';
 
 
 // Main App component with routing
@@ -74,6 +75,7 @@ function AppContent() {
   const [projectMessages, setProjectMessages] = useState({}); // Map project names to their message queues
   const [globalActiveSessions, setGlobalActiveSessions] = useState({}); // Global session tracking
   const [showActiveSessionsPanel, setShowActiveSessionsPanel] = useState(false);
+  const [showActiveTerminalsPanel, setShowActiveTerminalsPanel] = useState(false);
   
   const { ws, sendMessage, messages } = useWebSocket();
 
@@ -786,7 +788,7 @@ function AppContent() {
       )}
       
       {/* Active Sessions Monitor Button - Always show when there are sessions */}
-      {!showActiveSessionsPanel && (
+      {!showActiveSessionsPanel && !showActiveTerminalsPanel && (
         <button
           onClick={() => setShowActiveSessionsPanel(true)}
           className="fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 shadow-lg z-40 flex items-center gap-2"
@@ -804,6 +806,23 @@ function AppContent() {
           <span className="text-sm font-medium">
             Sessions ({Object.values(globalActiveSessions).filter(s => s.isActive).length})
           </span>
+        </button>
+      )}
+
+      {/* Active Terminals Monitor Button */}
+      {!showActiveTerminalsPanel && !showActiveSessionsPanel && (
+        <button
+          onClick={() => setShowActiveTerminalsPanel(true)}
+          className="fixed bottom-20 right-4 bg-green-600 hover:bg-green-700 text-white rounded-full p-3 shadow-lg z-40 flex items-center gap-2"
+          title="Show active terminals panel"
+        >
+          <div className="relative">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <span className="text-sm font-medium">Terminals</span>
         </button>
       )}
 
@@ -833,6 +852,20 @@ function AppContent() {
             }
           }}
           onClose={() => setShowActiveSessionsPanel(false)}
+        />
+      )}
+      
+      {/* Active Terminals Panel */}
+      {showActiveTerminalsPanel && (
+        <ActiveTerminalsPanel
+          onSelectProject={(projectName) => {
+            const project = projects.find(p => p.name === projectName);
+            if (project) {
+              setSelectedProject(project);
+              setActiveTab('terminal');
+            }
+          }}
+          onClose={() => setShowActiveTerminalsPanel(false)}
         />
       )}
     </div>

@@ -24,6 +24,11 @@ function MobileNav({ activeTab, setActiveTab, isInputFocused }) {
       id: 'git',
       icon: GitBranch,
       onClick: () => setActiveTab('git')
+    },
+    {
+      id: 'terminal',
+      icon: Terminal,
+      onClick: () => setActiveTab('terminal')
     }
   ];
 

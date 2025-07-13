@@ -370,12 +370,23 @@ function AppContent() {
   }, [sessionId, projects, navigate]);
 
   const handleProjectSelect = (project) => {
+    // When selecting a project, automatically prepare for a new session
+    // This allows users to immediately start typing without clicking "new session"
     setSelectedProject(project);
     setSelectedSession(null);
+    setActiveTab('chat'); // Switch to chat tab for immediate interaction
     navigate('/');
     if (isMobile) {
       setSidebarOpen(false);
     }
+    
+    // Force a state update to ensure ChatInterface receives the updated project
+    // This ensures the chat is ready to accept messages immediately
+    setTimeout(() => {
+      if (selectedProject?.name !== project.name) {
+        setSelectedProject(project);
+      }
+    }, 0);
   };
 
   const handleSessionSelect = (session) => {

@@ -1269,13 +1269,19 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   // Load saved state when project changes (but don't interfere with session loading)
   useEffect(() => {
     if (selectedProject) {
-      // Always load saved input draft for the project
-      const savedInput = localStorage.getItem(`draft_input_${selectedProject.name}`) || '';
-      if (savedInput !== input) {
-        setInput(savedInput);
+      // Only load saved input draft if we have a session
+      // For new sessions, start with empty input
+      if (selectedSession) {
+        const savedInput = localStorage.getItem(`draft_input_${selectedProject.name}`) || '';
+        if (savedInput !== input) {
+          setInput(savedInput);
+        }
+      } else {
+        // New session - clear input
+        setInput('');
       }
     }
-  }, [selectedProject?.name]);
+  }, [selectedProject?.name, selectedSession]);
 
 
   useEffect(() => {
@@ -1578,19 +1584,19 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   useEffect(() => {
     // When project changes, handle message state appropriately
     if (selectedProject) {
-      // If we have a selected session, let the session loading effect handle messages
-      // Otherwise, check for saved draft messages only if no session is selected
+      // Clear messages when switching projects to prevent cross-project contamination
       if (!selectedSession) {
-        const saved = localStorage.getItem(`chat_messages_${selectedProject.name}`);
-        setChatMessages(saved ? JSON.parse(saved) : []);
+        // For new sessions, always start with empty messages
+        setChatMessages([]);
+        setSessionMessages([]);
       }
-      // Project state will be automatically loaded from projectStates
+      // Note: Session messages will be loaded by the session change effect
     } else {
       // No project selected, clear everything
       setChatMessages([]);
       setSessionMessages([]);
     }
-  }, [selectedProject, selectedSession]);
+  }, [selectedProject]);
 
   const fetchProjectFiles = async () => {
     try {

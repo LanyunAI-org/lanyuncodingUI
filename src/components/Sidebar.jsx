@@ -42,6 +42,7 @@ function Sidebar({
   onProjectSelect, 
   onSessionSelect, 
   onNewSession,
+  onDirectNewSession,
   onSessionDelete,
   onProjectDelete,
   isLoading,
@@ -760,12 +761,10 @@ function Sidebar({
                                   className="w-8 h-8 rounded-lg bg-green-500/10 dark:bg-green-900/30 flex items-center justify-center active:scale-90 transition-all duration-150 border border-green-200 dark:border-green-800"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    onProjectSelect(project);
-                                    onNewSession(project);
+                                    onDirectNewSession(project);
                                   }}
                                   onTouchEnd={handleTouchClick(() => {
-                                    onProjectSelect(project);
-                                    onNewSession(project);
+                                    onDirectNewSession(project);
                                   })}
                                   title="New session"
                                 >
@@ -929,8 +928,7 @@ function Sidebar({
                               className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-green-50 dark:hover:bg-green-900/20 flex items-center justify-center rounded cursor-pointer touch:opacity-100"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onProjectSelect(project);
-                                onNewSession(project);
+                                onDirectNewSession(project);
                               }}
                               title="New session"
                             >
@@ -1236,8 +1234,7 @@ function Sidebar({
                         <button
                           className="w-full h-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md flex items-center justify-center gap-2 font-medium text-xs active:scale-[0.98] transition-all duration-150"
                           onClick={() => {
-                            onProjectSelect(project);
-                            onNewSession(project);
+                            onDirectNewSession(project);
                           }}
                         >
                           <Plus className="w-3 h-3" />
@@ -1250,11 +1247,7 @@ function Sidebar({
                         size="sm"
                         className="hidden md:flex w-full justify-start gap-2 mt-1 h-8 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
                         onClick={() => {
-                          // Ensure project is selected before creating new session
-                          if (selectedProject?.name !== project.name) {
-                            onProjectSelect(project);
-                          }
-                          onNewSession(project);
+                          onDirectNewSession(project);
                         }}
                       >
                         <Plus className="w-3 h-3" />

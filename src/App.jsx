@@ -414,7 +414,8 @@ function AppContent() {
       return;
     }
     
-    // Force update the selected project to ensure consistency
+    // IMPORTANT: When creating a new session, we must ensure the project is selected
+    // but WITHOUT selecting any existing sessions
     setSelectedProject(project);
     setSelectedSession(null);
     setActiveTab('chat');
@@ -430,6 +431,34 @@ function AppContent() {
         setSelectedProject(project);
       }
     }, 0);
+  };
+  
+  // New function specifically for direct new session creation from button
+  const handleDirectNewSession = (project) => {
+    if (!project) {
+      console.error('Cannot create new session without a project');
+      return;
+    }
+    
+    // Clear any existing draft messages from localStorage to prevent cross-project contamination
+    if (typeof window !== 'undefined') {
+      // Clear all project draft messages to ensure clean state
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('chat_messages_') || key.startsWith('draft_input_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+    
+    // Directly set the project and clear session without any conditional logic
+    setSelectedProject(project);
+    setSelectedSession(null);
+    setActiveTab('chat');
+    navigate('/');
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleSessionDelete = (sessionId) => {
@@ -700,6 +729,7 @@ function AppContent() {
               onProjectSelect={handleProjectSelect}
               onSessionSelect={handleSessionSelect}
               onNewSession={handleNewSession}
+              onDirectNewSession={handleDirectNewSession}
               onSessionDelete={handleSessionDelete}
               onProjectDelete={handleProjectDelete}
               isLoading={isLoadingProjects}
@@ -746,6 +776,7 @@ function AppContent() {
               onProjectSelect={handleProjectSelect}
               onSessionSelect={handleSessionSelect}
               onNewSession={handleNewSession}
+              onDirectNewSession={handleDirectNewSession}
               onSessionDelete={handleSessionDelete}
               onProjectDelete={handleProjectDelete}
               isLoading={isLoadingProjects}

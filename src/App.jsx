@@ -392,6 +392,13 @@ function AppContent() {
   };
 
   const handleNewSession = (project) => {
+    // Ensure project is properly set before creating new session
+    if (!project) {
+      console.error('Cannot create new session without a project');
+      return;
+    }
+    
+    // Force update the selected project to ensure consistency
     setSelectedProject(project);
     setSelectedSession(null);
     setActiveTab('chat');
@@ -399,6 +406,14 @@ function AppContent() {
     if (isMobile) {
       setSidebarOpen(false);
     }
+    
+    // Force a state update to ensure ChatInterface receives the updated project
+    // This helps when there's a race condition between state updates
+    setTimeout(() => {
+      if (selectedProject?.name !== project.name) {
+        setSelectedProject(project);
+      }
+    }, 0);
   };
 
   const handleSessionDelete = (sessionId) => {

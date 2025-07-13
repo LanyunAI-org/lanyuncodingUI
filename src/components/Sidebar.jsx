@@ -1218,7 +1218,13 @@ function Sidebar({
                         variant="default"
                         size="sm"
                         className="hidden md:flex w-full justify-start gap-2 mt-1 h-8 text-xs font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
-                        onClick={() => onNewSession(project)}
+                        onClick={() => {
+                          // Ensure project is selected before creating new session
+                          if (selectedProject?.name !== project.name) {
+                            onProjectSelect(project);
+                          }
+                          onNewSession(project);
+                        }}
                       >
                         <Plus className="w-3 h-3" />
                         New Session

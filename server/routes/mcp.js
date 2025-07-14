@@ -1,25 +1,73 @@
 import express from 'express';
-import { promises as fs } from 'fs';
-import path from 'path';
-import os from 'os';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import { spawn } from 'child_process';
 
 const router = express.Router();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Claude CLI command routes
+
+// GET /api/mcp/servers - List MCP servers (fallback endpoint for compatibility)
+router.get('/servers', async (req, res) => {
+  try {
+    const { scope = 'user' } = req.query;
+    console.log('📋 Listing MCP servers (fallback endpoint), scope:', scope);
+    
+    // Try to use Claude CLI to get servers
+    const process = spawn('claude', ['mcp', 'list', '-s', scope], {
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    
+    let stdout = '';
+    let stderr = '';
+    
+    process.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+    
+    process.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+    
+    process.on('close', (code) => {
+      if (code === 0) {
+        const servers = parseClaudeListOutput(stdout).map(server => ({
+          id: server.name,
+          name: server.name,
+          type: server.type,
+          scope: scope,
+          config: {
+            command: '',
+            args: [],
+            env: {},
+            url: '',
+            headers: {},
+            timeout: 30000
+          },
+          created: new Date().toISOString(),
+          updated: new Date().toISOString()
+        }));
+        res.json({ servers });
+      } else {
+        console.error('Claude CLI error:', stderr);
+        // Return empty array instead of error for graceful fallback
+        res.json({ servers: [] });
+      }
+    });
+    
+    process.on('error', (error) => {
+      console.error('Error running Claude CLI:', error);
+      // Return empty array instead of error for graceful fallback
+      res.json({ servers: [] });
+    });
+  } catch (error) {
+    console.error('Error listing MCP servers:', error);
+    res.json({ servers: [] });
+  }
+});
 
 // GET /api/mcp/cli/list - List MCP servers using Claude CLI
 router.get('/cli/list', async (req, res) => {
   try {
     console.log('📋 Listing MCP servers using Claude CLI');
-    
-    const { spawn } = await import('child_process');
-    const { promisify } = await import('util');
-    const exec = promisify(spawn);
     
     const process = spawn('claude', ['mcp', 'list', '-s', 'user'], {
       stdio: ['pipe', 'pipe', 'pipe']
@@ -61,8 +109,6 @@ router.post('/cli/add', async (req, res) => {
     const { name, type = 'stdio', command, args = [], url, headers = {}, env = {} } = req.body;
     
     console.log('➕ Adding MCP server using Claude CLI:', name);
-    
-    const { spawn } = await import('child_process');
     
     let cliArgs = ['mcp', 'add'];
     
@@ -134,8 +180,6 @@ router.delete('/cli/remove/:name', async (req, res) => {
     
     console.log('🗑️ Removing MCP server using Claude CLI:', name);
     
-    const { spawn } = await import('child_process');
-    
     const process = spawn('claude', ['mcp', 'remove', '-s', 'user', name], {
       stdio: ['pipe', 'pipe', 'pipe']
     });
@@ -176,8 +220,6 @@ router.get('/cli/get/:name', async (req, res) => {
     const { name } = req.params;
     
     console.log('📄 Getting MCP server details using Claude CLI:', name);
-    
-    const { spawn } = await import('child_process');
     
     const process = spawn('claude', ['mcp', 'get', '-s', 'user', name], {
       stdio: ['pipe', 'pipe', 'pipe']

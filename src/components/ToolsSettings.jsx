@@ -284,17 +284,18 @@ function ToolsSettings({ isOpen, onClose }) {
         setAllowedTools(settings.allowedTools || []);
         setDisallowedTools(settings.disallowedTools || []);
         setSkipPermissions(settings.skipPermissions || false);
-        setProjectSortOrder(settings.projectSortOrder || 'name');
+        setProjectSortOrder(settings.projectSortOrder || 'date');
       } else {
         // Set defaults
         setAllowedTools([]);
         setDisallowedTools([]);
         setSkipPermissions(false);
-        setProjectSortOrder('name');
+        setProjectSortOrder('date');
       }
 
       // Load MCP servers from API
-      await fetchMcpServers();
+      // Commented out as requested - no MCP API calls on dialog open
+      // await fetchMcpServers();
     } catch (error) {
       console.error('Error loading tool settings:', error);
       // Set defaults on error
@@ -605,6 +606,8 @@ function ToolsSettings({ isOpen, onClose }) {
             </div>
           </div>
           <select
+            id="project-sort-order"
+            name="projectSortOrder"
             value={projectSortOrder}
             onChange={(e) => setProjectSortOrder(e.target.value)}
             className="text-sm bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 w-32"
@@ -636,6 +639,8 @@ function ToolsSettings({ isOpen, onClose }) {
               <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
                 <label className="flex items-center gap-3">
                   <input
+                    id="skip-permissions"
+                    name="skipPermissions"
                     type="checkbox"
                     checked={skipPermissions}
                     onChange={(e) => setSkipPermissions(e.target.checked)}
@@ -667,6 +672,8 @@ function ToolsSettings({ isOpen, onClose }) {
               
               <div className="flex flex-col sm:flex-row gap-2">
                 <Input
+                  id="new-allowed-tool"
+                  name="newAllowedTool"
                   value={newAllowedTool}
                   onChange={(e) => setNewAllowedTool(e.target.value)}
                   placeholder='e.g., "Bash(git log:*)" or "Write"'
@@ -748,6 +755,8 @@ function ToolsSettings({ isOpen, onClose }) {
               
               <div className="flex flex-col sm:flex-row gap-2">
                 <Input
+                  id="new-disallowed-tool"
+                  name="newDisallowedTool"
                   value={newDisallowedTool}
                   onChange={(e) => setNewDisallowedTool(e.target.value)}
                   placeholder='e.g., "Bash(rm:*)" or "Write"'
@@ -1029,6 +1038,8 @@ function ToolsSettings({ isOpen, onClose }) {
                           Server Name *
                         </label>
                         <Input
+                          id="mcp-server-name"
+                          name="mcpServerName"
                           value={mcpFormData.name}
                           onChange={(e) => {
                             setMcpFormData(prev => ({...prev, name: e.target.value}));
@@ -1045,6 +1056,8 @@ function ToolsSettings({ isOpen, onClose }) {
                           Transport Type *
                         </label>
                         <select
+                          id="mcp-transport-type"
+                          name="mcpTransportType"
                           value={mcpFormData.type}
                           onChange={(e) => {
                             setMcpFormData(prev => ({...prev, type: e.target.value}));
@@ -1070,6 +1083,8 @@ function ToolsSettings({ isOpen, onClose }) {
                             Command *
                           </label>
                           <Input
+                            id="mcp-command"
+                            name="mcpCommand"
                             value={mcpFormData.config.command}
                             onChange={(e) => updateMcpConfig('command', e.target.value)}
                             placeholder="/path/to/mcp-server"
@@ -1082,6 +1097,8 @@ function ToolsSettings({ isOpen, onClose }) {
                             Arguments (one per line)
                           </label>
                           <textarea
+                            id="mcp-arguments"
+                            name="mcpArguments"
                             value={Array.isArray(mcpFormData.config.args) ? mcpFormData.config.args.join('\n') : ''}
                             onChange={(e) => updateMcpConfig('args', e.target.value.split('\n').filter(arg => arg.trim()))}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-blue-500 focus:border-blue-500"
@@ -1098,6 +1115,8 @@ function ToolsSettings({ isOpen, onClose }) {
                           URL *
                         </label>
                         <Input
+                          id="mcp-url"
+                          name="mcpUrl"
                           value={mcpFormData.config.url}
                           onChange={(e) => updateMcpConfig('url', e.target.value)}
                           placeholder="https://api.example.com/mcp"
@@ -1113,6 +1132,8 @@ function ToolsSettings({ isOpen, onClose }) {
                         Environment Variables (KEY=value, one per line)
                       </label>
                       <textarea
+                        id="mcp-env-vars"
+                        name="mcpEnvVars"
                         value={Object.entries(mcpFormData.config.env || {}).map(([k, v]) => `${k}=${v}`).join('\n')}
                         onChange={(e) => {
                           const env = {};
@@ -1136,6 +1157,8 @@ function ToolsSettings({ isOpen, onClose }) {
                           Headers (KEY=value, one per line)
                         </label>
                         <textarea
+                          id="mcp-headers"
+                          name="mcpHeaders"
                           value={Object.entries(mcpFormData.config.headers || {}).map(([k, v]) => `${k}=${v}`).join('\n')}
                           onChange={(e) => {
                             const headers = {};

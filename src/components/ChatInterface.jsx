@@ -1008,6 +1008,9 @@ const ImageAttachment = ({ file, onRemove, uploadProgress, error }) => {
   );
 };
 
+// Constant for limiting visible messages for performance
+const VISIBLE_MESSAGE_COUNT = 100;
+
 // ChatInterface: Main chat component with Session Protection System integration
 // 
 // Session Protection System prevents automatic project updates from interrupting active conversations:
@@ -1084,7 +1087,6 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   const [isTextareaExpanded, setIsTextareaExpanded] = useState(false);
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(-1);
   const [slashPosition, setSlashPosition] = useState(-1);
-  const [claudeStatus, setClaudeStatus] = useState(null);
 
 
   // Memoized diff calculation to prevent recalculating on every render
@@ -1752,11 +1754,11 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
 
   // Show only recent messages for better performance
   const visibleMessages = useMemo(() => {
-    if (chatMessages.length <= visibleMessageCount) {
+    if (chatMessages.length <= VISIBLE_MESSAGE_COUNT) {
       return chatMessages;
     }
-    return chatMessages.slice(-visibleMessageCount);
-  }, [chatMessages, visibleMessageCount]);
+    return chatMessages.slice(-VISIBLE_MESSAGE_COUNT);
+  }, [chatMessages]);
 
   // Capture scroll position before render when auto-scroll is disabled
   useEffect(() => {
@@ -2152,18 +2154,6 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   const handleTextareaClick = (e) => {
     setCursorPosition(e.target.selectionStart);
   };
-
-
-
-  const handleNewSession = () => {
-    setChatMessages([]);
-    setInput('');
-    updateProjectState({
-      isLoading: false,
-      canAbortSession: false,
-      claudeStatus: null
-    });
-  };
   
   const handleAbortSession = () => {
     if (currentSessionId && canAbortSession) {
@@ -2226,9 +2216,9 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           </div>
         ) : (
           <>
-            {chatMessages.length > visibleMessageCount && (
+            {chatMessages.length > VISIBLE_MESSAGE_COUNT && (
               <div className="text-center text-gray-500 dark:text-gray-400 text-sm py-2 border-b border-gray-200 dark:border-gray-700">
-                Showing last {visibleMessageCount} messages ({chatMessages.length} total) • 
+                Showing last {VISIBLE_MESSAGE_COUNT} messages ({chatMessages.length} total) • 
                 <button 
                   className="ml-1 text-blue-600 hover:text-blue-700 underline"
                   onClick={loadEarlierMessages}

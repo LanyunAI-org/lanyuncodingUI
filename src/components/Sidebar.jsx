@@ -64,7 +64,6 @@ function Sidebar({
   const [additionalSessions, setAdditionalSessions] = useState({});
   const [initialSessionsLoaded, setInitialSessionsLoaded] = useState(new Set());
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [projectSortOrder, setProjectSortOrder] = useState('name');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
   const [editingSessionName, setEditingSessionName] = useState('');
@@ -131,44 +130,6 @@ function Sidebar({
     }
   }, [projects, isLoading]);
 
-  // Load project sort order from settings
-  useEffect(() => {
-    const loadSortOrder = () => {
-      try {
-        const savedSettings = localStorage.getItem('claude-tools-settings');
-        if (savedSettings) {
-          const settings = JSON.parse(savedSettings);
-          setProjectSortOrder(settings.projectSortOrder || 'name');
-        }
-      } catch (error) {
-        console.error('Error loading sort order:', error);
-      }
-    };
-
-    // Load initially
-    loadSortOrder();
-
-    // Listen for storage changes
-    const handleStorageChange = (e) => {
-      if (e.key === 'claude-tools-settings') {
-        loadSortOrder();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also check periodically when component is focused (for same-tab changes)
-    const checkInterval = setInterval(() => {
-      if (document.hasFocus()) {
-        loadSortOrder();
-      }
-    }, 1000);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(checkInterval);
-    };
-  }, []);
 
   const toggleProject = (projectName) => {
     const newExpanded = new Set(expandedProjects);
@@ -225,7 +186,7 @@ function Sidebar({
     return mostRecentDate;
   };
 
-  // Combined sorting: starred projects first, then by selected order
+  // Always sort by modification time, with starred projects first
   const sortedProjects = [...projects].sort((a, b) => {
     const aStarred = isProjectStarred(a.name);
     const bStarred = isProjectStarred(b.name);
@@ -234,16 +195,8 @@ function Sidebar({
     if (aStarred && !bStarred) return -1;
     if (!aStarred && bStarred) return 1;
     
-    // For projects with same starred status, sort by selected order
-    if (projectSortOrder === 'date') {
-      // Sort by most recent activity (descending)
-      return getProjectLastActivity(b) - getProjectLastActivity(a);
-    } else {
-      // Sort by display name (user-defined) or fallback to name (ascending)
-      const nameA = a.displayName || a.name;
-      const nameB = b.displayName || b.name;
-      return nameA.localeCompare(nameB);
-    }
+    // Always sort by most recent activity (descending)
+    return getProjectLastActivity(b) - getProjectLastActivity(a);
   });
 
   const startEditing = (project) => {

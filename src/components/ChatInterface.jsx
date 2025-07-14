@@ -118,7 +118,7 @@ const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFile
           
           <div className="w-full">
             
-            {message.isToolUse ? (
+            {message.isToolUse && !['Read', 'TodoWrite', 'TodoRead'].includes(message.toolName) ? (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 sm:p-3 mb-2">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -423,40 +423,43 @@ const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFile
                     try {
                       const input = JSON.parse(message.toolInput);
                       if (input.file_path) {
-                        // Extract filename
                         const filename = input.file_path.split('/').pop();
-                        const pathParts = input.file_path.split('/');
-                        const directoryPath = pathParts.slice(0, -1).join('/');
-                        
-                        // Simple heuristic to show only relevant path parts
-                        // Show the last 2-3 directory parts before the filename
-                        const relevantParts = pathParts.slice(-4, -1); // Get up to 3 directories before filename
-                        const relativePath = relevantParts.length > 0 ? relevantParts.join('/') + '/' : '';
                         
                         return (
+                          <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                            Read{' '}
+                            <button 
+                              onClick={() => onFileOpen && onFileOpen(input.file_path)}
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline font-mono"
+                            >
+                              {filename}
+                            </button>
+                          </div>
+                        );
+                      }
+                    } catch (e) {
+                      // Fall back to regular display
+                    }
+                  }
+                  
+                  // Special handling for exit_plan_mode tool
+                  if (message.toolName === 'exit_plan_mode') {
+                    try {
+                      const input = JSON.parse(message.toolInput);
+                      if (input.plan) {
+                        // Replace escaped newlines with actual newlines
+                        const planContent = input.plan.replace(/\\n/g, '\n');
+                        return (
                           <details className="mt-2" open={autoExpandTools}>
-                            <summary className="text-sm text-blue-700 dark:text-blue-300 cursor-pointer hover:text-blue-800 dark:hover:text-blue-200 flex items-center gap-1">
+                            <summary className="text-sm text-blue-700 dark:text-blue-300 cursor-pointer hover:text-blue-800 dark:hover:text-blue-200 flex items-center gap-2">
                               <svg className="w-4 h-4 transition-transform details-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                               </svg>
-                              <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              <span className="text-gray-600 dark:text-gray-400 font-mono text-xs">{relativePath}</span>
-                              <span className="font-semibold text-blue-700 dark:text-blue-300 font-mono">{filename}</span>
+                              📋 View implementation plan
                             </summary>
-                            {showRawParameters && (
-                              <div className="mt-3">
-                                <details className="mt-2">
-                                  <summary className="text-xs text-blue-600 dark:text-blue-400 cursor-pointer hover:text-blue-700 dark:hover:text-blue-300">
-                                    View raw parameters
-                                  </summary>
-                                  <pre className="mt-2 text-xs bg-blue-100 dark:bg-blue-800/30 p-2 rounded whitespace-pre-wrap break-words overflow-hidden text-blue-900 dark:text-blue-100">
-                                    {message.toolInput}
-                                  </pre>
-                                </details>
-                              </div>
-                            )}
+                            <div className="mt-3 prose prose-sm max-w-none dark:prose-invert">
+                              <ReactMarkdown>{planContent}</ReactMarkdown>
+                            </div>
                           </details>
                         );
                       }
@@ -543,6 +546,30 @@ const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFile
                                     <span className="font-medium">Current Todo List</span>
                                   </div>
                                   <TodoList todos={todos} isResult={true} />
+                                </div>
+                              );
+                            }
+                          } catch (e) {
+                            // Fall through to regular handling
+                          }
+                        }
+
+                        // Special handling for exit_plan_mode tool results
+                        if (message.toolName === 'exit_plan_mode') {
+                          try {
+                            // The content should be JSON with a "plan" field
+                            const parsed = JSON.parse(content);
+                            if (parsed.plan) {
+                              // Replace escaped newlines with actual newlines
+                              const planContent = parsed.plan.replace(/\\n/g, '\n');
+                              return (
+                                <div>
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <span className="font-medium">Implementation Plan</span>
+                                  </div>
+                                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                                    <ReactMarkdown>{planContent}</ReactMarkdown>
+                                  </div>
                                 </div>
                               );
                             }
@@ -832,6 +859,61 @@ const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFile
                   </div>
                 </div>
               </div>
+            ) : message.isToolUse && message.toolName === 'Read' ? (
+              // Simple Read tool indicator
+              (() => {
+                try {
+                  const input = JSON.parse(message.toolInput);
+                  if (input.file_path) {
+                    const filename = input.file_path.split('/').pop();
+                    return (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2 text-sm text-blue-700 dark:text-blue-300">
+                        📖 Read{' '}
+                        <button 
+                          onClick={() => onFileOpen && onFileOpen(input.file_path)}
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline font-mono"
+                        >
+                          {filename}
+                        </button>
+                      </div>
+                    );
+                  }
+                } catch (e) {
+                  return (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2 text-sm text-blue-700 dark:text-blue-300">
+                      📖 Read file
+                    </div>
+                  );
+                }
+              })()
+            ) : message.isToolUse && message.toolName === 'TodoWrite' ? (
+              // Simple TodoWrite tool indicator with tasks
+              (() => {
+                try {
+                  const input = JSON.parse(message.toolInput);
+                  if (input.todos && Array.isArray(input.todos)) {
+                    return (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2">
+                        <div className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                          📝 Update todo list
+                        </div>
+                        <TodoList todos={input.todos} />
+                      </div>
+                    );
+                  }
+                } catch (e) {
+                  return (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2 text-sm text-blue-700 dark:text-blue-300">
+                      📝 Update todo list
+                    </div>
+                  );
+                }
+              })()
+            ) : message.isToolUse && message.toolName === 'TodoRead' ? (
+              // Simple TodoRead tool indicator
+              <div className="bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300 dark:border-blue-600 pl-3 py-1 mb-2 text-sm text-blue-700 dark:text-blue-300">
+                📋 Read todo list
+              </div>
             ) : (
               <div className="text-sm text-gray-700 dark:text-gray-300">
                 {message.type === 'assistant' ? (
@@ -1002,7 +1084,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   const [isTextareaExpanded, setIsTextareaExpanded] = useState(false);
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(-1);
   const [slashPosition, setSlashPosition] = useState(-1);
-  // Removed - now using projectState.claudeStatus
+  const [claudeStatus, setClaudeStatus] = useState(null);
 
 
   // Memoized diff calculation to prevent recalculating on every render
@@ -1668,14 +1750,13 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     return () => clearTimeout(timer);
   }, [input]);
 
-  // Show only recent messages for better performance (last 100 messages)
+  // Show only recent messages for better performance
   const visibleMessages = useMemo(() => {
-    const maxMessages = 100;
-    if (chatMessages.length <= maxMessages) {
+    if (chatMessages.length <= visibleMessageCount) {
       return chatMessages;
     }
-    return chatMessages.slice(-maxMessages);
-  }, [chatMessages]);
+    return chatMessages.slice(-visibleMessageCount);
+  }, [chatMessages, visibleMessageCount]);
 
   // Capture scroll position before render when auto-scroll is disabled
   useEffect(() => {
@@ -1773,6 +1854,11 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
         return newInput;
       });
     }
+  }, []);
+
+  // Load earlier messages by increasing the visible message count
+  const loadEarlierMessages = useCallback(() => {
+    setVisibleMessageCount(prevCount => prevCount + 100);
   }, []);
 
   // Handle image files from drag & drop or file picker
@@ -2020,19 +2106,34 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     const spaceIndex = textAfterAtQuery.indexOf(' ');
     const textAfterQuery = spaceIndex !== -1 ? textAfterAtQuery.slice(spaceIndex) : '';
     
-    const newInput = textBeforeAt + '@' + file.path + textAfterQuery;
+    const newInput = textBeforeAt + '@' + file.path + ' ' + textAfterQuery;
+    const newCursorPos = textBeforeAt.length + 1 + file.path.length + 1;
+    
+    // Immediately ensure focus is maintained
+    if (textareaRef.current && !textareaRef.current.matches(':focus')) {
+      textareaRef.current.focus();
+    }
+    
+    // Update input and cursor position
     setInput(newInput);
+    setCursorPosition(newCursorPos);
+    
+    // Hide dropdown
     setShowFileDropdown(false);
     setAtSymbolPosition(-1);
     
-    // Focus back to textarea and set cursor position
+    // Set cursor position synchronously 
     if (textareaRef.current) {
-      textareaRef.current.focus();
-      const newCursorPos = textBeforeAt.length + 1 + file.path.length;
-      setTimeout(() => {
-        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
-        setCursorPosition(newCursorPos);
-      }, 0);
+      // Use requestAnimationFrame for smoother updates
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+          // Ensure focus is maintained
+          if (!textareaRef.current.matches(':focus')) {
+            textareaRef.current.focus();
+          }
+        }
+      });
     }
   };
 
@@ -2125,10 +2226,13 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           </div>
         ) : (
           <>
-            {chatMessages.length > 100 && (
+            {chatMessages.length > visibleMessageCount && (
               <div className="text-center text-gray-500 dark:text-gray-400 text-sm py-2 border-b border-gray-200 dark:border-gray-700">
-                Showing last 100 messages ({chatMessages.length} total) • 
-                <button className="ml-1 text-blue-600 hover:text-blue-700 underline">
+                Showing last {visibleMessageCount} messages ({chatMessages.length} total) • 
+                <button 
+                  className="ml-1 text-blue-600 hover:text-blue-700 underline"
+                  onClick={loadEarlierMessages}
+                >
                   Load earlier messages
                 </button>
               </div>
@@ -2274,6 +2378,37 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
             </div>
           )}
           
+          {/* File dropdown - positioned outside dropzone to avoid conflicts */}
+          {showFileDropdown && filteredFiles.length > 0 && (
+            <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50 backdrop-blur-sm">
+              {filteredFiles.map((file, index) => (
+                <div
+                  key={file.path}
+                  className={`px-4 py-3 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0 touch-manipulation ${
+                    index === selectedFileIndex
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
+                  onMouseDown={(e) => {
+                    // Prevent textarea from losing focus on mobile
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selectFile(file);
+                  }}
+                >
+                  <div className="font-medium text-sm">{file.name}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                    {file.path}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
           <div {...getRootProps()} className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-blue-500 dark:focus-within:ring-blue-500 focus-within:border-blue-500 transition-all duration-200 ${isTextareaExpanded ? 'chat-input-expanded' : ''}`}>
             <input {...getInputProps()} />
             <textarea
@@ -2391,28 +2526,6 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                 />
               </svg>
             </button>
-            
-            {/* File dropdown */}
-            {showFileDropdown && filteredFiles.length > 0 && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50">
-                {filteredFiles.map((file, index) => (
-                  <div
-                    key={file.path}
-                    className={`px-4 py-2 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${
-                      index === selectedFileIndex
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                    }`}
-                    onClick={() => selectFile(file)}
-                  >
-                    <div className="font-medium text-sm">{file.name}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                      {file.path}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
           {/* Hint text */}
           <div className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2 hidden sm:block">

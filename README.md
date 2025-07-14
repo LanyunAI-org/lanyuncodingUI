@@ -236,8 +236,10 @@ This project is open source and free to use, modify, and distribute under the GP
 - **Watch** for updates and new releases
 - **Follow** the project for announcements
 
+### Sponsors
+- [Siteboon - AI powered website builder](https://siteboon.ai)
 ---
 
 <div align="center">
-  <strong>Made with care for the Claude Code community</strong>
+  <strong>Made with care for the Claude Code community.</strong>
 </div>

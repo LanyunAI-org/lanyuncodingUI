@@ -1,26 +1,59 @@
 {
-  "name": "claude-code-ui",
+  "name": "lanyuncoding",
   "version": "1.5.0",
-  "description": "A web-based UI for Claude Code CLI",
+  "description": "LanYun Coding - A web-based UI for Claude Code CLI",
   "type": "module",
   "main": "server/index.js",
+  "bin": {
+    "lanyuncoding": "./bin/lanyuncoding.js"
+  },
   "scripts": {
     "dev": "concurrently --kill-others \"npm run server\" \"npm run client\"",
     "server": "node server/index.js",
     "client": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "npm run build && npm run server"
+    "start": "npm run build && npm run server",
+    "prepublishOnly": "npm run build"
   },
+  "files": [
+    "bin/",
+    "dist/",
+    "server/",
+    "public/",
+    "src/",
+    "index.html",
+    "vite.config.js",
+    "tailwind.config.js",
+    "postcss.config.js",
+    "README.md",
+    "LICENSE",
+    "CLAUDE.md"
+  ],
   "keywords": [
     "claude",
     "ai",
     "code",
     "ui",
-    "assistant"
+    "assistant",
+    "lanyun",
+    "coding",
+    "claude-code",
+    "web-ui"
   ],
-  "author": "Claude Code UI Contributors",
+  "author": "LanYun Coding Team",
   "license": "MIT",
+  "homepage": "https://github.com/yourusername/lanyuncoding#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/lanyuncoding.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/lanyuncoding/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@anthropic-ai/claude-code": "^1.0.24",
     "@codemirror/lang-css": "^6.3.1",

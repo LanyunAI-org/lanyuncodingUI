@@ -1,0 +1,14 @@
+# NPM 私服配置示例
+# 将此文件复制为 .npmrc 并修改为你的私服地址
+
+# 设置 registry 为你的私服地址
+registry=https://your-private-registry.com/
+
+# 如果需要认证，添加认证信息
+# //your-private-registry.com/:_authToken=YOUR_AUTH_TOKEN
+
+# 或者只为特定 scope 设置私服
+# @yourcompany:registry=https://your-private-registry.com/
+
+# 发布配置
+# publishConfig 也可以在 package.json 中配置

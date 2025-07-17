@@ -1,8 +1,11 @@
 <div align="center">
-  <img src="public/logo.svg" alt="Claude Code UI" width="64" height="64">
-  <h1>Claude Code UI</h1>
+  <img src="public/icons/lanyunlogo.png" alt="LanYun Coding" width="64" height="64">
+  <h1>LanYun Coding</h1>
+  <p>A modern web UI for Claude Code CLI</p>
 </div>
 
+[![npm version](https://img.shields.io/npm/v/lanyuncoding.svg)](https://www.npmjs.com/package/lanyuncoding)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A desktop and mobile UI for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Anthropic's official CLI for AI-assisted coding. You can use it locally or remotely to view your active projects and sessions in claude code and make changes to them the same way you would do it in claude code CLI. This gives you a proper interface that works everywhere. 
 
@@ -41,11 +44,19 @@ A desktop and mobile UI for [Claude Code](https://docs.anthropic.com/en/docs/cla
 - **Session Management** - Resume conversations, manage multiple sessions, and track history
 
 
-## Quick Start
+## 🚀 Quick Start
+
+No installation required! Just run:
+
+```bash
+npx lanyuncoding
+```
+
+Your browser will automatically open with LanYun Coding UI.
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v20 or higher
+- [Node.js](https://nodejs.org/) v18 or higher
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and configured
 
 ### Installation

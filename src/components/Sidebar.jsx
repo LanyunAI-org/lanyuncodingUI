@@ -377,12 +377,13 @@ function Sidebar({
         {/* Desktop Header */}
         <div className="hidden md:flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
-              <MessageSquare className="w-4 h-4 text-primary-foreground" />
-            </div>
+            <img 
+              src="/icons/lanyunlogo.png" 
+              alt="Lanyun Logo" 
+              className="w-8 h-8 rounded-lg shadow-sm object-cover"
+            />
             <div>
-              <h1 className="text-lg font-bold text-foreground">Claude Code UI</h1>
-              <p className="text-sm text-muted-foreground">AI coding assistant interface</p>
+              <h1 className="text-lg font-bold text-foreground">Coding agent</h1>
             </div>
           </div>
           <div className="flex gap-2">
@@ -419,9 +420,11 @@ function Sidebar({
         <div className="md:hidden p-3 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <MessageSquare className="w-4 h-4 text-primary-foreground" />
-              </div>
+              <img 
+                src="/icons/lanyunlogo.png" 
+                alt="Lanyun Logo" 
+                className="w-8 h-8 rounded-lg object-cover"
+              />
               <div>
                 <h1 className="text-lg font-semibold text-foreground">Claude Code UI</h1>
                 <p className="text-sm text-muted-foreground">Projects</p>

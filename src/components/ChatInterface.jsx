@@ -111,7 +111,7 @@ const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFile
                 </div>
               )}
               <div className="text-sm font-medium text-gray-900 dark:text-white">
-                {message.type === 'error' ? 'Error' : 'Claude'}
+                {message.type === 'error' ? 'Error' : 'Coding agent'}
               </div>
             </div>
           )}
@@ -2255,7 +2255,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
                 <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0">
                   C
                 </div>
-                <div className="text-sm font-medium text-gray-900 dark:text-white">Claude</div>
+                <div className="text-sm font-medium text-gray-900 dark:text-white">Coding agent</div>
                 {/* Abort button removed - functionality not yet implemented at backend */}
               </div>
               <div className="w-full text-sm text-gray-500 dark:text-gray-400 pl-3 sm:pl-0">

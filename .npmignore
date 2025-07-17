@@ -1,0 +1,53 @@
+# Development files
+.env
+.env.local
+.vscode/
+.idea/
+*.log
+*.swp
+.DS_Store
+
+# Source files (use dist only)
+# Note: We need to include src/ for the build process
+# src/
+
+# Development configs
+.gitignore
+.eslintrc
+.prettierrc
+
+# Documentation and examples
+PUBLISH.md
+.npmrc.example
+*.example
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Database files
+*.sqlite
+*.db
+server/data/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Screenshots and large assets
+public/screenshots/
+
+# Git files
+.git/
+.gitattributes
+
+# Build artifacts not needed
+*.map

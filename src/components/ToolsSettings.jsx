@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
-import { X, Plus, Settings, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Play, Globe, Terminal, Zap } from 'lucide-react';
+import { X, Plus, Settings, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Play, Globe, Terminal, Zap, Key, ExternalLink, RefreshCw } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 function ToolsSettings({ isOpen, onClose }) {
@@ -42,6 +42,16 @@ function ToolsSettings({ isOpen, onClose }) {
   const [mcpServerTools, setMcpServerTools] = useState({});
   const [mcpToolsLoading, setMcpToolsLoading] = useState({});
   const [activeTab, setActiveTab] = useState('tools');
+  
+  // Kimi K2 API configuration state
+  const [kimiConfig, setKimiConfig] = useState({
+    enabled: false,
+    apiKey: '',
+    baseUrl: 'https://api.moonshot.cn/anthropic/'
+  });
+  const [kimiConfigLoading, setKimiConfigLoading] = useState(false);
+  const [kimiTestResult, setKimiTestResult] = useState(null);
+  const [originalEnvVars, setOriginalEnvVars] = useState(null);
 
   // Common tool patterns
   const commonTools = [
@@ -296,6 +306,9 @@ function ToolsSettings({ isOpen, onClose }) {
       // Load MCP servers from API
       // Commented out as requested - no MCP API calls on dialog open
       // await fetchMcpServers();
+      
+      // Load Kimi configuration
+      await loadKimiConfig();
     } catch (error) {
       console.error('Error loading tool settings:', error);
       // Set defaults on error
@@ -306,7 +319,7 @@ function ToolsSettings({ isOpen, onClose }) {
     }
   };
 
-  const saveSettings = () => {
+  const saveSettings = async () => {
     setIsSaving(true);
     setSaveStatus(null);
     
@@ -322,6 +335,28 @@ function ToolsSettings({ isOpen, onClose }) {
       
       // Save to localStorage
       localStorage.setItem('claude-tools-settings', JSON.stringify(settings));
+      
+      // Save Kimi configuration if enabled
+      if (kimiConfig.enabled && kimiConfig.apiKey) {
+        const token = localStorage.getItem('auth-token');
+        const response = await fetch('/api/env-vars', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            envVars: {
+              ANTHROPIC_BASE_URL: kimiConfig.baseUrl,
+              ANTHROPIC_API_KEY: kimiConfig.apiKey
+            }
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to save Kimi configuration');
+        }
+      }
       
       setSaveStatus('success');
       
@@ -501,11 +536,147 @@ function ToolsSettings({ isOpen, onClose }) {
     }
   };
 
+  // Kimi K2 API functions
+  const loadKimiConfig = async () => {
+    try {
+      const token = localStorage.getItem('auth-token');
+      const response = await fetch('/api/env-vars', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.envVars) {
+          // Store original env vars for restoration (including if they were not set)
+          if (!originalEnvVars) {
+            setOriginalEnvVars({
+              ANTHROPIC_BASE_URL: data.envVars.ANTHROPIC_BASE_URL || null,
+              ANTHROPIC_API_KEY: data.envVars.ANTHROPIC_API_KEY || null
+            });
+          }
+          
+          // Check if Kimi is configured
+          const isKimiConfigured = data.envVars.ANTHROPIC_BASE_URL?.includes('moonshot.cn');
+          setKimiConfig({
+            enabled: isKimiConfigured,
+            apiKey: isKimiConfigured ? data.envVars.ANTHROPIC_API_KEY || '' : '',
+            baseUrl: data.envVars.ANTHROPIC_BASE_URL || 'https://api.moonshot.cn/anthropic/'
+          });
+        } else {
+          // No env vars set, store as null
+          if (!originalEnvVars) {
+            setOriginalEnvVars({
+              ANTHROPIC_BASE_URL: null,
+              ANTHROPIC_API_KEY: null
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading Kimi config:', error);
+    }
+  };
+
+  const handleKimiTest = async () => {
+    setKimiConfigLoading(true);
+    setKimiTestResult(null);
+    
+    try {
+      const token = localStorage.getItem('auth-token');
+      const response = await fetch('/api/kimi/test', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          apiKey: kimiConfig.apiKey,
+          baseUrl: kimiConfig.baseUrl
+        })
+      });
+      
+      const result = await response.json();
+      setKimiTestResult(result);
+    } catch (error) {
+      setKimiTestResult({
+        success: false,
+        message: 'Failed to test connection',
+        details: error.message
+      });
+    } finally {
+      setKimiConfigLoading(false);
+    }
+  };
+
+  const handleKimiRestore = async () => {
+    if (!originalEnvVars) return;
+    
+    setKimiConfigLoading(true);
+    
+    try {
+      const token = localStorage.getItem('auth-token');
+      // Convert null values to empty strings for deletion
+      const envVarsToRestore = {
+        ANTHROPIC_BASE_URL: originalEnvVars.ANTHROPIC_BASE_URL || '',
+        ANTHROPIC_API_KEY: originalEnvVars.ANTHROPIC_API_KEY || ''
+      };
+      
+      const response = await fetch('/api/env-vars', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          envVars: envVarsToRestore
+        })
+      });
+      
+      if (response.ok) {
+        setKimiConfig({
+          enabled: false,
+          apiKey: '',
+          baseUrl: 'https://api.moonshot.cn/anthropic/'
+        });
+        setKimiTestResult({
+          success: true,
+          message: originalEnvVars.ANTHROPIC_BASE_URL || originalEnvVars.ANTHROPIC_API_KEY 
+            ? 'Original configuration restored successfully' 
+            : 'Environment variables removed successfully'
+        });
+      } else {
+        throw new Error('Failed to restore configuration');
+      }
+    } catch (error) {
+      setKimiTestResult({
+        success: false,
+        message: 'Failed to restore configuration',
+        details: error.message
+      });
+    } finally {
+      setKimiConfigLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
+  
+  // Chrome compatibility: Force a simple modal first
+  if (typeof window !== 'undefined' && /Chrome/.test(navigator.userAgent)) {
+    console.log('Chrome detected, using compatibility mode');
+  }
 
   return (
-    <div className="modal-backdrop fixed inset-0 flex items-center justify-center z-[100] md:p-4 bg-background/95">
-      <div className="bg-background border border-border md:rounded-lg shadow-xl w-full md:max-w-4xl h-full md:h-[90vh] flex flex-col">
+    <div 
+      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80" 
+      style={{ zIndex: 9999, isolation: 'isolate' }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 md:rounded-lg shadow-xl w-full md:max-w-4xl h-full md:h-[90vh] flex flex-col" style={{ position: 'relative', zIndex: 10000 }}>
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-3">
             <Settings className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
@@ -546,6 +717,16 @@ function ToolsSettings({ isOpen, onClose }) {
                 }`}
               >
                 Appearance
+              </button>
+              <button
+                onClick={() => setActiveTab('kimi')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'kimi'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Kimi K2 API
               </button>
             </div>
           </div>
@@ -1019,7 +1200,7 @@ function ToolsSettings({ isOpen, onClose }) {
 
             {/* MCP Server Form Modal */}
             {showMcpForm && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110] p-4">
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 10001 }}>
                 <div className="bg-background border border-border rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                   <div className="flex items-center justify-between p-4 border-b border-border">
                     <h3 className="text-lg font-medium text-foreground">
@@ -1255,6 +1436,194 @@ function ToolsSettings({ isOpen, onClose }) {
                 </div>
               </div>
             )}
+              </div>
+            )}
+
+            {/* Kimi K2 API Tab */}
+            {activeTab === 'kimi' && (
+              <div className="space-y-6 md:space-y-8">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Key className="w-5 h-5 text-purple-500" />
+                    <h3 className="text-lg font-medium text-foreground">
+                      Kimi K2 API Configuration
+                    </h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Configure Claude Code to use Kimi K2 API as the backend. This allows you to use Kimi's powerful language model through the Claude Code interface.
+                  </p>
+
+                  {/* Quick Setup Section */}
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-medium text-purple-900 dark:text-purple-100 mb-1">
+                          Quick Setup
+                        </div>
+                        <div className="text-sm text-purple-700 dark:text-purple-300 mb-3">
+                          Enable Kimi K2 API integration with Claude Code
+                        </div>
+                        
+                        <div className="space-y-4">
+                          {/* Enable/Disable Toggle */}
+                          <div className="flex items-center gap-3">
+                            <input
+                              id="kimi-enabled"
+                              type="checkbox"
+                              checked={kimiConfig.enabled}
+                              onChange={(e) => setKimiConfig(prev => ({ ...prev, enabled: e.target.checked }))}
+                              className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
+                            />
+                            <label htmlFor="kimi-enabled" className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              Enable Kimi K2 API
+                            </label>
+                          </div>
+
+                          {/* API Key Input */}
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">
+                              Moonshot API Key *
+                            </label>
+                            <div className="relative">
+                              <Input
+                                id="kimi-api-key"
+                                type="password"
+                                value={kimiConfig.apiKey}
+                                onChange={(e) => setKimiConfig(prev => ({ ...prev, apiKey: e.target.value }))}
+                                placeholder="sk-..."
+                                className="pr-10"
+                                disabled={!kimiConfig.enabled}
+                              />
+                              <a
+                                href="https://platform.moonshot.cn/console/api-keys"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+                                title="Get API Key"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Get your API key from <a href="https://platform.moonshot.cn/console/api-keys" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">Moonshot Platform</a>
+                            </p>
+                          </div>
+
+                          {/* Base URL Input */}
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">
+                              API Base URL
+                            </label>
+                            <Input
+                              id="kimi-base-url"
+                              type="url"
+                              value={kimiConfig.baseUrl}
+                              onChange={(e) => setKimiConfig(prev => ({ ...prev, baseUrl: e.target.value }))}
+                              placeholder="https://api.moonshot.cn/anthropic/"
+                              disabled={!kimiConfig.enabled}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Default: https://api.moonshot.cn/anthropic/
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Test Connection */}
+                  <div className="flex items-center gap-3">
+                    <Button
+                      onClick={() => handleKimiTest()}
+                      disabled={!kimiConfig.enabled || !kimiConfig.apiKey || kimiConfigLoading}
+                      variant="outline"
+                      size="sm"
+                      className="text-purple-600 border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                    >
+                      {kimiConfigLoading ? (
+                        <>
+                          <div className="w-4 h-4 animate-spin rounded-full border-2 border-purple-600 border-t-transparent mr-2" />
+                          Testing...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-2" />
+                          Test Connection
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      onClick={() => handleKimiRestore()}
+                      disabled={!originalEnvVars || kimiConfigLoading}
+                      variant="outline"
+                      size="sm"
+                      className="text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Restore Original
+                    </Button>
+                  </div>
+
+                  {/* Test Result */}
+                  {kimiTestResult && (
+                    <div className={`p-3 rounded-lg text-sm ${
+                      kimiTestResult.success 
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800' 
+                        : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800'
+                    }`}>
+                      <div className="font-medium flex items-center gap-2">
+                        {kimiTestResult.success ? (
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        {kimiTestResult.message}
+                      </div>
+                      {kimiTestResult.details && (
+                        <div className="mt-2 text-xs">
+                          {kimiTestResult.details}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Information Section */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                      How it works:
+                    </h4>
+                    <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                      <li>• When enabled, Claude Code will use Kimi K2 API instead of Anthropic's API</li>
+                      <li>• Your API key is stored locally and used to authenticate with Moonshot</li>
+                      <li>• Environment variables ANTHROPIC_BASE_URL and ANTHROPIC_API_KEY are set</li>
+                      <li>• You can restore the original configuration at any time</li>
+                      <li>• Changes take effect immediately for new Claude Code sessions</li>
+                    </ul>
+                  </div>
+
+                  {/* Warning Section */}
+                  <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-orange-900 dark:text-orange-100 mb-1">
+                          Important Notes:
+                        </h4>
+                        <ul className="text-sm text-orange-700 dark:text-orange-300 space-y-1">
+                          <li>• This configuration affects all Claude Code sessions</li>
+                          <li>• Make sure to keep your API key secure</li>
+                          <li>• Some Claude-specific features may not be available with Kimi K2</li>
+                          <li>• Restart Claude Code after changing these settings</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

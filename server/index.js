@@ -41,6 +41,7 @@ import { spawnClaude, abortClaudeSession } from './claude-cli.js';
 import gitRoutes from './routes/git.js';
 import authRoutes from './routes/auth.js';
 import mcpRoutes from './routes/mcp.js';
+import envRoutes from './routes/env.js';
 import { initializeDatabase } from './database/db.js';
 import { validateApiKey, authenticateToken, authenticateWebSocket } from './middleware/auth.js';
 
@@ -174,6 +175,12 @@ app.use('/api/git', authenticateToken, gitRoutes);
 
 // MCP API Routes (protected)
 app.use('/api/mcp', authenticateToken, mcpRoutes);
+
+// Environment variable routes (protected)
+app.use('/api/env-vars', authenticateToken, envRoutes);
+
+// Kimi K2 routes (protected)
+app.use('/api/kimi', authenticateToken, envRoutes);
 
 // Static files served after API routes
 app.use(express.static(path.join(__dirname, '../dist')));

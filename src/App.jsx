@@ -24,6 +24,7 @@ import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
 import MobileNav from './components/MobileNav';
 import ToolsSettings from './components/ToolsSettings';
+import TestModal from './components/TestModal';
 import QuickSettingsPanel from './components/QuickSettingsPanel';
 
 import { useWebSocket } from './utils/websocket';
@@ -54,6 +55,12 @@ function AppContent() {
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showToolsSettings, setShowToolsSettings] = useState(false);
+  const [showTestModal, setShowTestModal] = useState(false);
+  
+  // Expose setShowTestModal globally for testing
+  React.useEffect(() => {
+    window.setShowTestModal = setShowTestModal;
+  }, []);
   const [showQuickSettings, setShowQuickSettings] = useState(false);
   const [autoExpandTools, setAutoExpandTools] = useState(() => {
     const saved = localStorage.getItem('autoExpandTools');
@@ -888,6 +895,12 @@ function AppContent() {
       <ToolsSettings
         isOpen={showToolsSettings}
         onClose={() => setShowToolsSettings(false)}
+      />
+      
+      {/* Test Modal for Chrome */}
+      <TestModal
+        isOpen={showTestModal}
+        onClose={() => setShowTestModal(false)}
       />
 
       {/* Version Upgrade Modal */}

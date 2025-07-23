@@ -3,11 +3,19 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import os from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const DB_PATH = path.join(__dirname, 'auth.db');
+// Use user's home directory for database storage
+const APP_DATA_DIR = path.join(os.homedir(), '.lanyuncodingui');
+// Ensure directory exists
+if (!fs.existsSync(APP_DATA_DIR)) {
+  fs.mkdirSync(APP_DATA_DIR, { recursive: true });
+}
+
+const DB_PATH = path.join(APP_DATA_DIR, 'auth.db');
 const INIT_SQL_PATH = path.join(__dirname, 'init.sql');
 
 // Create database connection

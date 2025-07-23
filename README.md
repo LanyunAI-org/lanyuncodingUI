@@ -52,11 +52,9 @@ No installation required! Just run:
 npx lanyuncodingui
 ```
 
-```bash
-npx lanyuncoding
-```
-
 Your browser will automatically open with LanYun Coding UI.
+
+> **Windows Users**: If you encounter installation issues, please see our [Windows Installation Guide](./WINDOWS_INSTALL.md).
 
 ### Prerequisites
 

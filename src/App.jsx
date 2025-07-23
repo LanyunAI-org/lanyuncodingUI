@@ -663,19 +663,9 @@ function AppContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                 </svg>
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Update Available</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">A new version is ready</p>
-              </div>
+              
             </div>
-            <button
-              onClick={() => setShowVersionModal(false)}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+           
           </div>
 
           {/* Version Info */}
@@ -693,14 +683,14 @@ function AppContent() {
           {/* Upgrade Instructions */}
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-gray-900 dark:text-white">How to upgrade:</h3>
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 border">
+            {/* <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 border">
               <code className="text-sm text-gray-800 dark:text-gray-200 font-mono">
                 git checkout main && git pull && npm install
               </code>
             </div>
             <p className="text-xs text-gray-600 dark:text-gray-400">
               Run this command in your Claude Code UI directory to update to the latest version.
-            </p>
+            </p> */}
           </div>
 
           {/* Actions */}

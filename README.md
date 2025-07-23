@@ -59,9 +59,19 @@ Your browser will automatically open with LanYun Coding UI.
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) v18 or higher
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and configured
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) - Will be installed automatically if not present
 
-### Installation
+### Global Installation
+
+Install globally to use anywhere:
+
+```bash
+npm install -g lanyuncodingui
+```
+
+This will automatically install Claude Code CLI if it's not already installed.
+
+### Development Installation
 
 1. **Clone the repository:**
 ```bash

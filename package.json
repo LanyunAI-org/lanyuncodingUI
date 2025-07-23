@@ -14,10 +14,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "npm run build && npm run server",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postinstall": "node scripts/postinstall.js"
   },
   "files": [
     "bin/",
+    "scripts/",
     "dist/",
     "server/",
     "public/",
@@ -53,6 +55,14 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/claude-code": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/claude-code": {
+      "optional": false
+    }
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "^1.0.24",

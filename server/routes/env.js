@@ -93,6 +93,8 @@ router.post('/', async (req, res) => {
       if (value === '' || value === null || value === undefined) {
         // Remove the environment variable if value is empty
         newContent = newContent.replace(regex, '');
+        // Also remove any standalone lines that might be left
+        newContent = newContent.replace(new RegExp(`^\\s*${key}\\s*=.*$`, 'gm'), '');
       } else {
         const exportLine = `export ${key}=${value}`;
         
@@ -129,8 +131,12 @@ router.post('/', async (req, res) => {
     
     // Clean up empty lines and sections
     newContent = newContent.replace(/\n{3,}/g, '\n\n'); // Replace multiple newlines with double newlines
-    // Remove section marker if it's empty
-    newContent = newContent.replace(/# Claude Code environment variables\n+(?=\n|$)/g, '');
+
+    // Remove section marker if it's empty (no export statements following it)
+    newContent = newContent.replace(/# Claude Code environment variables\s*\n+(?=\n|$)/g, '');
+
+    // Remove any trailing whitespace and ensure file ends with single newline
+    newContent = newContent.replace(/\s+$/, '\n');
     
     // Write back to file
     const success = await writeShellConfig(configFile, newContent);
@@ -181,8 +187,8 @@ router.post('/test', async (req, res) => {
       const data = await response.json();
       res.json({
         success: true,
-        message: 'Successfully connected to Kimi K2 API',
-        details: 'API connection verified. You can now use Kimi K2 with Claude Code.'
+        message: 'Successfully connected to Lanyun K2 API',
+        details: 'API connection verified. You can now use Lanyun K2 with Claude Code.'
       });
     } else {
       const errorText = await response.text();

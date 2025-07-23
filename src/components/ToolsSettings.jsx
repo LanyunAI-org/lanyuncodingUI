@@ -612,18 +612,17 @@ function ToolsSettings({ isOpen, onClose }) {
   };
 
   const handleKimiRestore = async () => {
-    if (!originalEnvVars) return;
-    
     setKimiConfigLoading(true);
-    
+
     try {
       const token = localStorage.getItem('auth-token');
-      // Convert null values to empty strings for deletion
+      // Always clear the environment variables by sending empty strings
+      // This will force removal regardless of what was originally stored
       const envVarsToRestore = {
-        ANTHROPIC_BASE_URL: originalEnvVars.ANTHROPIC_BASE_URL || '',
-        ANTHROPIC_API_KEY: originalEnvVars.ANTHROPIC_API_KEY || ''
+        ANTHROPIC_BASE_URL: '',
+        ANTHROPIC_API_KEY: ''
       };
-      
+
       const response = await fetch('/api/env-vars', {
         method: 'POST',
         headers: {
@@ -634,26 +633,32 @@ function ToolsSettings({ isOpen, onClose }) {
           envVars: envVarsToRestore
         })
       });
-      
+
       if (response.ok) {
+        // Reset Kimi config to default state
         setKimiConfig({
           enabled: false,
           apiKey: '',
           baseUrl: 'https://maas-api.lanyun.net/anthropic/'
         });
+
+        // Reset original env vars to null since we've cleared everything
+        setOriginalEnvVars({
+          ANTHROPIC_BASE_URL: null,
+          ANTHROPIC_API_KEY: null
+        });
+
         setKimiTestResult({
           success: true,
-          message: originalEnvVars.ANTHROPIC_BASE_URL || originalEnvVars.ANTHROPIC_API_KEY 
-            ? 'Original configuration restored successfully' 
-            : 'Environment variables removed successfully'
+          message: 'Environment variables cleared successfully'
         });
       } else {
-        throw new Error('Failed to restore configuration');
+        throw new Error('Failed to clear configuration');
       }
     } catch (error) {
       setKimiTestResult({
         success: false,
-        message: 'Failed to restore configuration',
+        message: 'Failed to clear configuration',
         details: error.message
       });
     } finally {
@@ -1555,13 +1560,13 @@ function ToolsSettings({ isOpen, onClose }) {
 
                     <Button
                       onClick={() => handleKimiRestore()}
-                      disabled={!originalEnvVars || kimiConfigLoading}
+                      disabled={kimiConfigLoading}
                       variant="outline"
                       size="sm"
                       className="text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                     >
                       <RefreshCw className="w-4 h-4 mr-2" />
-                      Restore Original
+                      Clear Configuration
                     </Button>
                   </div>
 

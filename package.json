@@ -1,11 +1,11 @@
 {
-  "name": "lanyuncoding",
-  "version": "1.5.0",
-  "description": "LanYun Coding - A web-based UI for Claude Code CLI",
+  "name": "lanyuncodingui",
+  "version": "1.5.1",
+  "description": "LanYun Coding UI - A web-based UI for Claude Code CLI",
   "type": "module",
   "main": "server/index.js",
   "bin": {
-    "lanyuncoding": "./bin/lanyuncoding.js"
+    "lanyuncodingui": "./bin/lanyuncodingui.js"
   },
   "scripts": {
     "dev": "concurrently --kill-others \"npm run server\" \"npm run client\"",
@@ -43,13 +43,13 @@
   ],
   "author": "LanYun Coding Team",
   "license": "MIT",
-  "homepage": "https://github.com/yourusername/lanyuncoding#readme",
+  "homepage": "https://github.com/siteboon/claudecodeui#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/lanyuncoding.git"
+    "url": "git+https://github.com/siteboon/claudecodeui.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/lanyuncoding/issues"
+    "url": "https://github.com/siteboon/claudecodeui/issues"
   },
   "engines": {
     "node": ">=18.0.0"

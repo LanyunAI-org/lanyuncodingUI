@@ -1,139 +1,139 @@
-# 发布和使用 LanYun Coding
+# 发布到 npm 的完整流程
 
-## 发布到 NPM 私服
+## 1. 准备工作
 
-### 1. 配置私服
-
-复制 `.npmrc.example` 为 `.npmrc` 并修改配置：
-
+### 1.1 注册 npm 账号
+如果还没有 npm 账号，请先注册：
 ```bash
-cp .npmrc.example .npmrc
+# 访问 https://www.npmjs.com/signup 注册账号
+# 或使用命令行注册
+npm adduser
 ```
 
-编辑 `.npmrc` 文件，设置你的私服地址：
-
-```
-registry=https://your-private-registry.com/
-//your-private-registry.com/:_authToken=YOUR_AUTH_TOKEN
-```
-
-### 2. 构建和发布
-
+### 1.2 登录 npm
 ```bash
-# 安装依赖
-npm install
+npm login
+# 输入用户名、密码和邮箱
+```
 
-# 构建项目（会自动在发布前执行）
+### 1.3 验证登录状态
+```bash
+npm whoami
+```
+
+## 2. 测试项目
+
+### 2.1 构建前端资源
+```bash
 npm run build
+```
 
-# 发布到私服
+### 2.2 本地测试
+```bash
+# 创建全局链接
+npm link
+
+# 测试命令
+lanyuncodingui
+
+# 测试完成后取消链接
+npm unlink -g lanyuncodingui
+```
+
+## 3. 检查包名可用性
+
+```bash
+npm view lanyuncodingui
+# 如果返回 404 错误，说明包名可用
+```
+
+## 4. 发布前检查
+
+### 4.1 检查要发布的文件
+```bash
+npm pack --dry-run
+```
+
+### 4.2 检查包大小
+```bash
+npm pack
+# 会生成 lanyuncodingui-1.5.0.tgz
+ls -lh lanyuncodingui-*.tgz
+```
+
+## 5. 发布
+
+### 5.1 首次发布
+```bash
 npm publish
 ```
 
-### 3. 配置私服访问权限
-
-如果你的私服需要特定的发布配置，可以在 `package.json` 中添加：
-
-```json
-"publishConfig": {
-  "registry": "https://your-private-registry.com/"
-}
-```
-
-## 使用方式
-
-### 方式一：使用 npx（推荐）
-
-无需全局安装，直接运行：
-
+### 5.2 更新版本发布
 ```bash
-# 从私服运行
-npx --registry https://your-private-registry.com/ lanyuncoding
-
-# 如果已配置 .npmrc，可以直接运行
-npx lanyuncoding
-```
-
-### 方式二：全局安装
-
-```bash
-# 从私服安装
-npm install -g lanyuncoding --registry https://your-private-registry.com/
-
-# 运行
-lanyuncoding
-```
-
-### 方式三：作为项目依赖
-
-```bash
-# 添加到项目
-npm install lanyuncoding --registry https://your-private-registry.com/
-
-# 在 package.json scripts 中使用
-{
-  "scripts": {
-    "ui": "lanyuncoding"
-  }
-}
-```
-
-## 配置选项
-
-### 环境变量
-
-- `PORT`: 指定服务器端口（默认：随机 3000-4000）
-- `USE_DEFAULT_PORT=true`: 使用默认端口 3000
-- `OPENAI_API_KEY`: 用于音频转录功能（可选）
-
-### 运行示例
-
-```bash
-# 使用自定义端口
-PORT=8080 npx lanyuncoding
-
-# 使用默认端口
-USE_DEFAULT_PORT=true npx lanyuncoding
-```
-
-## 故障排除
-
-### 1. 权限问题
-
-如果遇到权限错误，确保 bin 文件有执行权限：
-
-```bash
-chmod +x bin/lanyuncoding.js
-```
-
-### 2. 依赖问题
-
-某些原生依赖（如 `better-sqlite3`、`node-pty`）可能需要编译。确保系统有必要的构建工具：
-
-- macOS: Xcode Command Line Tools
-- Linux: build-essential
-- Windows: windows-build-tools
-
-### 3. 私服连接问题
-
-检查私服配置：
-
-```bash
-# 查看当前 registry
-npm config get registry
-
-# 验证私服连接
-npm ping --registry https://your-private-registry.com/
-```
-
-## 版本更新
-
-更新版本并发布：
-
-```bash
-# 更新版本号
-npm version patch  # 或 minor/major
+# 更新版本号（自动修改 package.json）
+npm version patch  # 1.5.0 -> 1.5.1
+npm version minor  # 1.5.0 -> 1.6.0
+npm version major  # 1.5.0 -> 2.0.0
 
 # 发布新版本
 npm publish
+```
+
+## 6. 验证发布
+
+### 6.1 检查 npm 页面
+访问 https://www.npmjs.com/package/lanyuncodingui
+
+### 6.2 测试安装
+```bash
+# 在其他目录测试
+npx lanyuncodingui
+```
+
+## 7. 常见问题
+
+### 7.1 权限问题
+如果提示权限不足，可能是包名被占用或需要组织权限。
+
+### 7.2 发布失败
+- 检查网络连接
+- 确认已登录 npm
+- 检查 package.json 格式
+
+### 7.3 包太大
+- 检查 .npmignore 文件
+- 确保只包含必要文件
+- 使用 `npm pack` 预览
+
+## 8. 维护
+
+### 8.1 更新文档
+- 更新 README.md 中的使用说明
+- 更新版本号和更新日志
+
+### 8.2 处理 Issues
+- 定期查看 GitHub Issues
+- 及时修复 bug 并发布新版本
+
+### 8.3 版本管理
+- 使用语义化版本号
+- 重大更新前发布 beta 版本测试
+
+## 完整发布命令示例
+
+```bash
+# 1. 确保代码最新
+git pull origin main
+
+# 2. 构建项目
+npm run build
+
+# 3. 更新版本
+npm version patch
+
+# 4. 发布
+npm publish
+
+# 5. 推送 git 标签
+git push origin main --tags
 ```

@@ -4,7 +4,7 @@
   <p>A modern web UI for Claude Code CLI</p>
 </div>
 
-[![npm version](https://img.shields.io/npm/v/lanyuncoding.svg)](https://www.npmjs.com/package/lanyuncoding)
+[![npm version](https://img.shields.io/npm/v/lanyuncodingui.svg)](https://www.npmjs.com/package/lanyuncodingui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A desktop and mobile UI for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Anthropic's official CLI for AI-assisted coding. You can use it locally or remotely to view your active projects and sessions in claude code and make changes to them the same way you would do it in claude code CLI. This gives you a proper interface that works everywhere. 
@@ -47,6 +47,10 @@ A desktop and mobile UI for [Claude Code](https://docs.anthropic.com/en/docs/cla
 ## 🚀 Quick Start
 
 No installation required! Just run:
+
+```bash
+npx lanyuncodingui
+```
 
 ```bash
 npx lanyuncoding

@@ -1,6 +1,6 @@
 {
   "name": "lanyuncodingui",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "LanYun Coding UI - A web-based UI for Claude Code CLI",
   "type": "module",
   "main": "server/index.js",

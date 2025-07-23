@@ -47,7 +47,7 @@ function ToolsSettings({ isOpen, onClose }) {
   const [kimiConfig, setKimiConfig] = useState({
     enabled: false,
     apiKey: '',
-    baseUrl: 'https://api.moonshot.cn/anthropic/'
+    baseUrl: 'https://maas-api.lanyun.net/anthropic/'
   });
   const [kimiConfigLoading, setKimiConfigLoading] = useState(false);
   const [kimiTestResult, setKimiTestResult] = useState(null);
@@ -563,7 +563,7 @@ function ToolsSettings({ isOpen, onClose }) {
           setKimiConfig({
             enabled: isKimiConfigured,
             apiKey: isKimiConfigured ? data.envVars.ANTHROPIC_API_KEY || '' : '',
-            baseUrl: data.envVars.ANTHROPIC_BASE_URL || 'https://api.moonshot.cn/anthropic/'
+            baseUrl: data.envVars.ANTHROPIC_BASE_URL || 'https://maas-api.lanyun.net/anthropic/'
           });
         } else {
           // No env vars set, store as null
@@ -639,7 +639,7 @@ function ToolsSettings({ isOpen, onClose }) {
         setKimiConfig({
           enabled: false,
           apiKey: '',
-          baseUrl: 'https://api.moonshot.cn/anthropic/'
+          baseUrl: 'https://maas-api.lanyun.net/anthropic/'
         });
         setKimiTestResult({
           success: true,
@@ -726,7 +726,7 @@ function ToolsSettings({ isOpen, onClose }) {
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
-                Kimi K2 API
+                lanyun K2 API
               </button>
             </div>
           </div>
@@ -1446,11 +1446,11 @@ function ToolsSettings({ isOpen, onClose }) {
                   <div className="flex items-center gap-3">
                     <Key className="w-5 h-5 text-purple-500" />
                     <h3 className="text-lg font-medium text-foreground">
-                      Kimi K2 API Configuration
+                      Lanyun K2 API Configuration
                     </h3>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Configure Claude Code to use Kimi K2 API as the backend. This allows you to use Kimi's powerful language model through the Claude Code interface.
+                    Configure Claude Code to use Lanyun K2 API as the backend. This allows you to use Kimi's powerful language model through the Claude Code interface.
                   </p>
 
                   {/* Quick Setup Section */}
@@ -1461,7 +1461,7 @@ function ToolsSettings({ isOpen, onClose }) {
                           Quick Setup
                         </div>
                         <div className="text-sm text-purple-700 dark:text-purple-300 mb-3">
-                          Enable Kimi K2 API integration with Claude Code
+                          Enable Lanyun K2 API integration with Claude Code
                         </div>
                         
                         <div className="space-y-4">
@@ -1475,14 +1475,14 @@ function ToolsSettings({ isOpen, onClose }) {
                               className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
                             />
                             <label htmlFor="kimi-enabled" className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                              Enable Kimi K2 API
+                              Enable Lanyun K2 API
                             </label>
                           </div>
 
                           {/* API Key Input */}
                           <div>
                             <label className="block text-sm font-medium text-foreground mb-2">
-                              Moonshot API Key *
+                              Lanyun API Key *
                             </label>
                             <div className="relative">
                               <Input
@@ -1495,7 +1495,7 @@ function ToolsSettings({ isOpen, onClose }) {
                                 disabled={!kimiConfig.enabled}
                               />
                               <a
-                                href="https://platform.moonshot.cn/console/api-keys"
+                                href="https://maas.lanyun.net/#/system/apiKey"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
@@ -1505,7 +1505,7 @@ function ToolsSettings({ isOpen, onClose }) {
                               </a>
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Get your API key from <a href="https://platform.moonshot.cn/console/api-keys" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">Moonshot Platform</a>
+                              Get your API key from <a href="https://maas.lanyun.net/#/system/apiKey" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">Lanyun Maas</a>
                             </p>
                           </div>
 
@@ -1519,11 +1519,11 @@ function ToolsSettings({ isOpen, onClose }) {
                               type="url"
                               value={kimiConfig.baseUrl}
                               onChange={(e) => setKimiConfig(prev => ({ ...prev, baseUrl: e.target.value }))}
-                              placeholder="https://api.moonshot.cn/anthropic/"
+                              placeholder="https://maas-api.lanyun.net/anthropic/"
                               disabled={!kimiConfig.enabled}
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                              Default: https://api.moonshot.cn/anthropic/
+                              Default:  https://maas-api.lanyun.net/anthropic/
                             </p>
                           </div>
                         </div>

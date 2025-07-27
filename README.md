@@ -7,7 +7,9 @@
 [![npm version](https://img.shields.io/npm/v/lanyuncodingui.svg)](https://www.npmjs.com/package/lanyuncodingui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-为 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)（Anthropic 官方的 AI 辅助编程 CLI）提供的桌面和移动端界面。您可以在本地或远程使用它来查看 Claude Code 中的活跃项目和会话，并像使用 Claude Code CLI 一样进行修改。这为您提供了一个在任何地方都能使用的完善界面。 
+为 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)（Anthropic 官方的 AI 辅助编程 CLI）提供的现代化 Web 界面。它让您可以通过直观的图形界面管理项目、查看会话历史、编辑文件，以及与 Claude 进行交互，无论您身在何处。
+
+> 🙏 **致敬**：本项目基于 [claudecodeui](https://github.com/siteboon/claudecodeui) 改造而来。我们站在巨人的肩膀上，在原项目的优秀基础上进行了移动端适配、UI 优化和功能增强。感谢原作者的开源贡献！ 
 
 ## 截图
 
@@ -34,58 +36,63 @@
 
 </div>
 
-## 功能特性
+## ✨ 功能特性
 
-- **响应式设计** - 在桌面、平板和移动设备上无缝运行，让您也能在移动端使用 Claude Code
-- **交互式聊天界面** - 内置聊天界面，与 Claude Code 无缝通信
-- **集成 Shell 终端** - 通过内置 Shell 功能直接访问 Claude Code CLI
-- **文件浏览器** - 交互式文件树，支持语法高亮和实时编辑
-- **Git 浏览器** - 查看、暂存和提交您的更改，还可以切换分支
-- **会话管理** - 恢复对话、管理多个会话并跟踪历史记录
+### 核心功能
+- 🎨 **响应式设计** - 完美适配桌面、平板和移动设备，让您随时随地使用 Claude Code
+- 💬 **交互式聊天界面** - 流畅的对话体验，支持代码高亮、Markdown 渲染
+- 🖥️ **集成终端** - 内置 Shell 终端，直接访问 Claude Code CLI
+- 📁 **文件管理** - 可视化文件树，支持实时编辑、语法高亮
+- 🔀 **Git 集成** - 查看差异、暂存更改、提交代码，轻松管理版本
+- 📝 **会话管理** - 智能保存对话历史，随时恢复之前的工作状态
+
+### 相比原项目的改进
+- 📱 **移动端优化** - 全新的移动端 UI 设计，触摸友好的操作体验
+- 🎯 **更好的交互** - 优化的文件浏览器和编辑器，提升开发效率
+- 🚀 **性能提升** - 改进的 WebSocket 通信，更快的响应速度
+- 🛠️ **功能增强** - 新增 Git 浏览器、会话管理等实用功能
 
 
 ## 🚀 快速开始
 
-无需安装！只需运行：
+### 一键运行（推荐）
+
+无需安装，直接运行：
 
 ```bash
 npx lanyuncodingui
-npm install -g lanyuncodingui
 ```
 
-运行 lanyuncodingui 您的浏览器将自动打开 LanYun Coding UI。
-
-> **Windows 用户**：如果遇到安装问题，请参阅我们的 [Windows 安装指南](./WINDOWS_INSTALL.md)。
-
-### 前置要求
-
-- [Node.js](https://nodejs.org/) v18 或更高版本
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) - 如果未安装，将自动安装
+您的默认浏览器将自动打开 LanYun Coding UI 界面。
 
 ### 全局安装
 
-全局安装以便在任何地方使用：
+如果您想在任何地方使用，可以全局安装：
 
 ```bash
 npm install -g lanyuncodingui
+lanyuncodingui
 ```
 
-如果尚未安装 Claude Code CLI，这将自动安装它。
+> 💡 **提示**：如果尚未安装 Claude Code CLI，我们会自动为您安装。
 
-1. **打开工具设置** - 点击侧边栏的齿轮图标
-3. **选择性启用** - 仅打开您需要的工具
-4. **应用设置** - 您的偏好设置将保存在本地
+### 系统要求
 
-<div align="center">
+- **Node.js** v18 或更高版本
+- **Claude Code CLI** - 将自动检测并安装
+- **现代浏览器** - Chrome、Firefox、Safari、Edge 等
 
-![Tools Settings Modal](public/screenshots/tools-modal.png)
-*工具设置界面 - 仅启用您需要的工具*
+> 🪟 **Windows 用户**：暂时不支持windows系统，敬请期待
 
-</div>
+## 📖 使用指南
 
-**推荐方法**：从启用基本工具开始，根据需要添加更多工具。您随时可以调整这些设置。
+### 初始设置
 
-## 使用指南
+1. **启动应用** - 运行 `lanyuncodingui` 后，浏览器会自动打开
+2. **配置工具** - 点击侧边栏的齿轮图标，选择您需要的工具
+3. **开始对话** - 在聊天界面输入您的需求，Claude 会协助您编程
+
+> 💡 **建议**：从基本工具开始，根据需要逐步启用更多功能
 
 ### 核心功能
 
@@ -124,39 +131,94 @@ UI 自动从 `~/.claude/projects/` 发现 Claude Code 项目并提供：
 - **自适应布局** - 可折叠侧边栏和智能内容优先级
 - **添加到主屏幕快捷方式** - 将快捷方式添加到主屏幕，应用将像 PWA 一样运行
 
-## 架构
+## 🏗️ 技术架构
 
-### 系统概览
+### 系统架构
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   前端           │    │   后端           │    │  Claude CLI     │
-│   (React/Vite)  │◄──►│ (Express/WS)    │◄──►│  集成            │
+│   Web 前端      │    │   Node.js 后端  │    │  Claude Code    │
+│   React + Vite  │◄──►│ Express + WS    │◄──►│     CLI         │
+│   Tailwind CSS  │    │   SQLite DB     │    │   (子进程)      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
+        ↑                        ↑                      ↑
+        └────────────────────────┴──────────────────────┘
+                    WebSocket 实时通信
 ```
 
-### 后端 (Node.js + Express)
-- **Express 服务器** - RESTful API 和静态文件服务
-- **WebSocket 服务器** - 用于聊天和项目刷新的通信
-- **Claude CLI 集成** - 进程生成和管理
-- **会话管理** - JSONL 解析和对话持久化
-- **文件系统 API** - 为项目提供文件浏览器
+### 技术栈
 
-### 前端 (React + Vite)
-- **React 18** - 现代化组件架构，使用 hooks
-- **CodeMirror** - 高级代码编辑器，支持语法高亮
+#### 前端
+- **React 18** - 现代化的组件化开发
+- **Vite** - 极速的开发服务器和构建工具
+- **Tailwind CSS** - 实用优先的 CSS 框架
+- **CodeMirror 6** - 强大的代码编辑器
+- **WebSocket** - 实时双向通信
 
-## 发布npm 包
-# 1. 提交更改
+#### 后端
+- **Express.js** - 轻量级 Web 服务框架
+- **WebSocket (ws)** - 原生 WebSocket 支持
+- **SQLite** - 轻量级数据库存储
+- **Child Process** - Claude CLI 进程管理
+- **Chokidar** - 文件系统监控
+
+## 🤝 贡献指南
+
+我们欢迎所有形式的贡献！无论是提交 Bug 报告、功能建议还是代码贡献。
+
+### 开发环境设置
+
+```bash
+# 克隆仓库
+git clone https://github.com/LanyunAI-org/lanyuncodingUI.git
+cd ccui
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+```
+
+### 提交 PR 前请确保
+
+- 代码通过所有测试
+- 遵循项目的代码规范
+- 更新相关文档
+
+## 📦 发布流程
+
+维护者发布新版本的步骤：
+
+```bash
+# 1. 提交所有更改
 git add .
-git commit -m "Fix database readonly error and optional .env loading"
+git commit -m "您的提交信息"
 
 # 2. 更新版本号
-npm version patch
+npm version patch  # 或 minor/major
 
-# 3. 发布
+# 3. 发布到 npm
 npm publish
 
-# 4. 推送标签
+# 4. 推送代码和标签
 git push origin main --tags
+```
+
+## 📄 许可证
+
+本项目基于 MIT 许可证开源 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 🙏 鸣谢
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) - Anthropic 的官方 AI 编程助手
+- [claudecodeui](https://github.com/siteboon/claudecodeui) - 本项目的基础，感谢原作者的开源精神
+- 所有贡献者和用户的支持与反馈
+
+---
+
+<div align="center">
+  <p>如果这个项目对您有帮助，请给我们一个 ⭐️</p>
+  <p>Made with ❤️ by LanYun Team</p>
+</div>
 

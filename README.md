@@ -205,10 +205,6 @@ npm publish
 git push origin main --tags
 ```
 
-## 📄 许可证
-
-本项目基于 MIT 许可证开源 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
 ## 🙏 鸣谢
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) - Anthropic 的官方 AI 编程助手
